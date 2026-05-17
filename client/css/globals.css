@@ -1,0 +1,24 @@
+:root {
+  /* Blues */
+  --blue-dark: #00296B;
+  --blue-mid: #003F88;
+  --blue-light: #00509D;
+  /* Yellows */
+  --yellow-dark: #FDC500;
+  --yellow-bright: #FFD500;
+  /* Neutrals */
+  --white: #FFFFFF;
+  --off-white: #F8F9FA;
+  --gray-light: #E9ECEF;
+  --gray: #6C757D;
+  --black: #212529;
+  
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.3);
+
+  /* Glassmorphism defaults */
+  --glass-bg: rgba(0, 41, 107, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.2);
+
+}
