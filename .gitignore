@@ -1,0 +1,54 @@
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS junk
+.directory
+*.log
+*.tmp
+
+# Uploaded images (user/agency content)
+public/uploads/
+
+# Composer dependencies (if you use any)
+vendor/
+composer.lock
+composer.phar
+
+# Environment config (database credentials)
+.env
+.env.local
+config/database.local.php
+
+# Database dumps – only ignore full backup dumps; keep migration/seed files
+*.sql.bak
+*.sql.gz
+database/full_backup_*.sql
+
+# Session files (if stored on disk – usually outside project root, but just in case)
+sess_*
+tmp/
+
+# Project specific temp / cache
+cache/
+logs/
+
+# Node modules (if you use any frontend build tools)
+node_modules/
+package-lock.json
+
+# Compiled / minified files (if generated)
+*.min.css
+*.min.js
+public/assets/dist/
+
+# Backup files created by editors
+*.orig
+*.rej
+
+config.php
