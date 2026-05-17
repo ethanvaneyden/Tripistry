@@ -44,3 +44,26 @@ img {
   max-width: 100%;
   display: block;
 }
+
+input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  padding: 0.9rem 1.2rem;
+  color: var(--white);
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--yellow-dark);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(253, 197, 0, 0.3);
+}
+
+.auth-container .logo {
+  height: 96px;
+  width: auto;
+}

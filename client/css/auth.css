@@ -4,7 +4,7 @@
   box-sizing: border-box;
 }
 
-.login-container {
+.auth-container {
   position: relative;
   z-index: 1;
   width: 100%;
@@ -14,12 +14,12 @@
   justify-content: center;
 }
 
-.login-heading {
+.auth-heading {
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
-.login-heading h1 {
+.auth-heading h1 {
   font-size: 2rem;
   font-weight: 700;
   background: var(--yellow-dark);
@@ -30,15 +30,37 @@
   margin-bottom: 0.25rem;
 }
 
-.login-heading h2 {
+.auth-heading h2 {
   font-size: 0.85rem;
   font-weight: normal;
   color: white;
 }
 
+.input-group h2 {
+   
+  font-weight: normal;
+  color: var(--yellow-dark);
+}
 
-.login-card {
-  width: 440px;
+.auth-heading p {
+  color: var(--off-white)
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 560px;
   background: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
@@ -49,43 +71,26 @@
   transition: var(--transition-smooth);
 }
 
-.login-card:hover {
+.auth-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- Form & Inputs ---------- */
-.login-form {
+.auth-form {
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
 }
 
-.login-form input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 1rem;
-  padding: 0.9rem 1.2rem;
-  color: var(--white);
-  font-size: 0.95rem;
-  transition: var(--transition-smooth);
-}
 
-.login-form input:focus {
-  outline: none;
-  border-color: var(--yellow-dark);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(253, 197, 0, 0.3);
-}
-
-.login-form input::placeholder {
+.auth-form input::placeholder {
   color: rgba(255, 255, 255, 0.6);
   font-weight: 400;
 }
 
 /* Button */
-.login-form button {
+.auth-form button {
   background: linear-gradient(135deg, var(--yellow-dark), var(--yellow-bright));
   border: none;
   border-radius: 1rem;
@@ -99,31 +104,31 @@
   letter-spacing: 0.3px;
 }
 
-.login-form button:hover {
+.auth-form button:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(253, 197, 0, 0.35);
 }
 
-.login-form button:active {
+.auth-form button:active {
   transform: translateY(0);
 }
 
 /* ---------- Footer ---------- */
-.login-footer {
+.auth-footer {
   text-align: center;
   margin-top: 1.8rem;
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.85rem;
 }
 
-.login-footer a {
+.auth-footer a {
   color: var(--yellow-dark);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
-.login-footer a:hover {
+.auth-footer a:hover {
   color: var(--yellow-bright);
   text-decoration: underline;
 }
