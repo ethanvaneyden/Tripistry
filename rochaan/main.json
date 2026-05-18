@@ -1,0 +1,24 @@
+[
+  {
+    "email": "traveler@up.ac.za",
+    "password": "mySecurePassword"
+  },
+  {
+    "name": "Rochaan",
+    "surname": "Surname",
+    "email": "rochaan@example.com",
+    "password": "secretPassword",
+    "phone": "0821234567",
+    "nationality": "South African",
+    "dateofbirth": "2003-04-12"
+  },
+  {
+    "name": "Tripistry Pretoria",
+    "email": "pretoria@tripistry.com",
+    "password": "agencyPassword",
+    "phone": "0123456789",
+    "street": "Lynnwood Road",
+    "city": "Pretoria",
+    "country": "South Africa"
+  }
+]
