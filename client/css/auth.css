@@ -61,19 +61,12 @@
 .auth-card {
   width: 100%;
   max-width: 560px;
-  background: var(--glass-bg);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-radius: 2rem;
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
   padding: 2rem 2rem 2rem 2rem;
-  transition: var(--transition-smooth);
-}
-
-.auth-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* ---------- Form & Inputs ---------- */

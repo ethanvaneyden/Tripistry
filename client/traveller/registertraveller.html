@@ -11,10 +11,10 @@
 
   <body>
     <div class="auth-container">
-      <img src="../assets/logo.png" class="logo">
+      <img src="../assets/logo.png" class="logo" />
       <div class="auth-heading">
-        <h1>Register an agency</h1>
-        <h2>Please enter the details of your agency</h2>
+        <h1>Register traveller</h1>
+        <h2>Please enter your personal details</h2>
       </div>
 
       <div class="auth-card">
@@ -30,15 +30,22 @@
                 autocomplete="name"
               />
               <input
+                type="text"
+                id="name"
+                placeholder="Surname"
+                required
+                autocomplete="name"
+              />
+            </div>
+
+            <div class="input-row">
+              <input
                 type="email"
                 id="email"
                 placeholder="Email address"
                 required
                 autocomplete="email"
               />
-            </div>
-
-            <div class="input-row">
               <input
                 type="password"
                 id="password"
@@ -46,28 +53,39 @@
                 required
                 autocomplete="new-password"
               />
+            </div>
+
+            <div class="input-row">
               <input
                 type="text"
                 id="phone"
                 placeholder="Phone"
                 required
-                autocomplete="tel"
+                autocomplete="email"
+              />
+              <input
+                type="text"
+                id="nationality"
+                placeholder="Nationality"
+                required
+                autocomplete="new-password"
               />
             </div>
-          </div>
 
-          <div class="input-group">
-            <h2 class="text-center">Address</h2>
-            <input type="text" id="street" placeholder="Street" required />
-            <input type="text" id="city" placeholder="City" required />
-            <input type="text" id="country" placeholder="Country" required />
+            <input
+              type="date"
+              id="dateofbirth"
+              placeholder="Date of birth"
+              required
+              autocomplete="email"
+            />
           </div>
           <button type="submit">Register</button>
         </form>
 
         <div class="auth-footer">
           <p>Have an account? <a href="../index.html">Login</a></p>
-          <p>Not an agency? <a href="../traveller/registertraveller.html">Join as traveller</a></p>
+          <p>Not a traveller? <a href="../agency/registeragency.html">Join as agency</a></p>
         </div>
       </div>
     </div>
