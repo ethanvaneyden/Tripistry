@@ -60,8 +60,6 @@
 }
 
 
-
-/* ---------- Form & Inputs ---------- */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -99,7 +97,6 @@
   transform: translateY(0);
 }
 
-/* ---------- Footer ---------- */
 .auth-footer {
   text-align: center;
   margin-top: 1.8rem;
@@ -120,10 +117,9 @@
 }
 
 input[type="date"] {
-  color: rgba(255, 255, 255, 0.8); /* Makes the typed text white */
+  color: rgba(255, 255, 255, 0.8);
 }
 
-/* Styles the native browser placeholder for dates if needed */
 input::-webkit-datetime-edit { 
   color: rgba(255, 255, 255, 0.6); 
 }

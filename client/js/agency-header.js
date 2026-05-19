@@ -9,12 +9,14 @@ function createNavbar() {
         </div>
         <div class="nav-links">
             <a href="../traveller/browsepackages.html" class="nav-link">
-            <i class="bi bi-compass"></i>Browse
+            <i class="bi bi-briefcase"></i>My Packages
             </a>
             <a href="../traveller/travellerpackages.html" class="nav-link">
-            <i class="bi bi-suitcase-lg"></i>My Bookings</a>
+            <i class="bi bi-plus-circle"></i>Create</a>
             <a href="my_reviews.html" class="nav-link">
-            <i class="bi bi-chat-left-heart"></i>My Reviews</a>
+            <i class="bi bi-people"></i>Group Trips</a>
+            <a href="../index.html" class="nav-link">
+            <i class="bi bi-chat-left-quote"></i></i>Reviews</a>
             <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">
             <i class="bi bi-box-arrow-right"></i>Logout</a>
         </div>
