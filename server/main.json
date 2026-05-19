@@ -1,0 +1,98 @@
+[[
+  {
+    "email": "traveler@up.ac.za",
+    "password": "mySecurePassword"
+  },
+  {
+    "name": "Rochaan",
+    "surname": "Surname",
+    "email": "rochaan@example.com",
+    "password": "secretPassword",
+    "phone": "0821234567",
+    "nationality": "South African",
+    "dateofbirth": "2003-04-12"
+  },
+  {
+    "name": "Tripistry Pretoria",
+    "email": "pretoria@tripistry.com",
+    "password": "agencyPassword",
+    "phone": "0123456789",
+    "street": "Lynnwood Road",
+    "city": "Pretoria",
+    "country": "South Africa"
+  } 
+],
+[
+  {
+    "PackageID": 1,
+    "AgencyName": "Wanderlust SA Ltd",
+    "Title": "Ultimate Cape Town Coastal Escape",
+    "Description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
+    "StartDate": "2026-06-15",
+    "EndDate": "2026-06-22",
+    "MaxParticipants": 12,
+    "TotalPrice": 14500.00,
+    "ThumbnailURL": "https://images.tripistry.com/packages/pkg1_thumb.jpg"
+  }
+],
+{
+  "PackageID": 1,
+  "Title": "Ultimate Cape Town Coastal Escape",
+  "Description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
+  "TotalPrice": 14500.00,
+  "StartDate": "2026-06-15",
+  "EndDate": "2026-06-22",
+  "Agency": {
+    "AgencyID": 2,
+    "Name": "Wanderlust SA Ltd",
+    "Email": "info@wanderlust.co.za",
+    "Phone": "+27123456789"
+  },
+  "Destinations": [
+    { "City": "Cape Town", "Country": "South Africa" }
+  ],
+  "Accommodations": [
+    {
+      "AccommodationID": 12,
+      "Name": "Hout Bay Beachfront Hotel",
+      "Type": "Hotel",
+      "StarRating": 4,
+      "AveragePricePerNight": 1850.00,
+      "Address": "12 Beach Road, Cape Town"
+    }
+  ],
+  "Flights": [
+    {
+      "FlightID": 45,
+      "FlightNumber": "FA201",
+      "Airline": "FlySafair",
+      "DepartureDateTime": "2026-06-15 06:00:00",
+      "ArrivalDateTime": "2026-06-15 08:10:00",
+      "OriginCode": "ORY",
+      "DestinationCode": "CPT"
+    }
+  ],
+  "Attractions": [
+    {
+      "Name": "Table Mountain Cableway",
+      "EntranceFee": 420.00,
+      "OpeningHours": "08:00 - 19:00"
+    }
+  ],
+  "Restaurants": [
+    {
+      "Name": "The Mariner's Wharf",
+      "Cuisine": "Seafood",
+      "PriceRange": "$$$"
+    }
+  ],
+  "Reviews": [
+    {
+      "TravellerName": "Alice",
+      "Rating": 5,
+      "Comment": "Incredible coordination! Had an amazing time in Hout Bay.",
+      "CreatedAt": "2026-05-01 14:22:10"
+    }
+  ]
+}
+]
