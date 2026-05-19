@@ -3,41 +3,46 @@
 @import 'text.css';
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    font-family: "Inter", sans-serif;
-    font-weight: 400;
-    line-height: 1.5;
-    min-height: 100vh;
-    background-color: var(--blue-dark);
-    background-image: url('https://wallpaperaccess.com/full/3390090.jpg');
-    background-size: cover;
-    background-position: center 30%;
-    background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    position: relative;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image: url('../assets/backdrop.jpg');
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  padding: 1rem;
+  position: relative;
 }
 
 body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(0, 41, 107, 0.6), rgba(0, 0, 0, 0.4));
-    z-index: 0;
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
+
+
 
 /* Headings & Hero Titles */
 h1,
 h2,
 h3 {
-    font-family: "Plus Jakarta Sans", sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 img {
@@ -66,4 +71,22 @@ input:focus {
 .auth-container .logo {
   height: 96px;
   width: auto;
+}
+
+.frosted-glass {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 40px 0 rgba(31, 38, 135, 0.45);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+}
+
+.clear-glass {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
 }

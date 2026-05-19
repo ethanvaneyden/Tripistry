@@ -1,0 +1,36 @@
+const navbar = document.getElementById('navbar');
+
+function createNavbar() {
+    navbar.innerHTML = `
+        <div class="nav-brand">
+            <a href="dashboard.html">
+                <img src="../assets/logo.png" alt="Triptistry" class="nav-logo">
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="browse.html" class="nav-link">Browse</a>
+            <a href="../traveller/travellerpackages.html" class="nav-link">My Bookings</a>
+            <a href="my_reviews.html" class="nav-link">My Reviews</a>
+            <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">Logout</a>
+        </div>
+    `;
+    highlightActiveLink();
+}
+
+function highlightActiveLink() {
+    const currentPath = window.location.pathname.split("/").pop();
+
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    navLinks.forEach(link => {
+        const linkPath = link.getAttribute('href');
+
+        if (linkPath.endsWith(currentPath)) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+createNavbar();
