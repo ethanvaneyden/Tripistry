@@ -249,8 +249,9 @@
 }
 
 .btn-reserve:hover {
-    background: var(--navy-dark);
-    color: white;
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 24px rgba(224, 130, 68, 0.4);
 }
 
 @media (max-width: 992px) {

@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>My packages</title>
+    <title>Create Package</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="description" content="" />
     <link href="../css/style.css" rel="stylesheet" />
     <link href="../css/nav.css" rel="stylesheet" />
     <link href="../css/packages.css" rel="stylesheet" />
-    <link href="../css/agencydashoard.css" rel="stylesheet" />
+    <link href="../css/createpackage.css" rel="stylesheet" />
 
     <link
       rel="stylesheet"
@@ -21,24 +21,61 @@
       <nav class="navbar" id="navbar"></nav>
     </header>
     <main>
-      <h1 class="section-heading">Agency Control Center: Wanderlust SA Ltd</h1>
+      <div class="breadcrumb">
+        <a href="#" class="concept-link">Agency Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="concept-current">Create Package</span>
+      </div>
 
-      <section class="side-by-side">
-        <div class="stat-card frosted-glass">
-          <h2>Active Packages</h2>
-          <p>3</p>
+      <section class="create-container clear-glass">
+        <h2>Create new travel package</h2>
+
+        <div class="main-details">
+          <input type="text" placeholder="Package Title" id="titleInput" />
+          <input
+            type="textarea"
+            placeholder="Package Description"
+            id="descriptionInput"
+          />
         </div>
 
-        <div class="stat-card frosted-glass">
-          <h2>Average Rating</h2>
-          <p>4.8/5</p>
+        <div class="secondary-details">
+          <input type="date" placeholder="Start Date" id="startDateInput" />
+          <input type="date" placeholder="End Date" id="endDateInput" />
+          <input
+            type="number"
+            placeholder="Max Participants"
+            id="maxParticipantsInput"
+          />
+          <input type="number" placeholder="Total Price" id="priceInput" />
         </div>
+
+        <h2>Link Resources</h2>
+        <div class="side-by-side">
+          <div class="resource-group">
+            <button class="resource" id="addFlight">
+              <p>Add flight</p>
+              <i class="bi bi-plus"></i>
+            </button>
+            <button class="resource" id="addDestination">
+              <p>Add destination</p>
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+
+          <div class="resource-group">
+            <button class="resource" id="addAccomodation">
+              <p>Add accomodation</p>
+              <i class="bi bi-plus"></i>
+            </button>
+            <button class="resource" id="addRestuarant">
+              <p>Add restuarant</p>
+              <i class="bi bi-plus"></i>
+            </button>
+          </div>
+        </div>
+        <button class="publish-button" id="publishPackage">Publish package</button>
       </section>
-
-      <section
-        class="package-section clear-glass"
-        id="package-section"
-      ></section>
     </main>
   </body>
   <script src="../js/agency-header.js"></script>

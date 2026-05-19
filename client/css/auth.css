@@ -63,6 +63,7 @@
 .auth-form {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1.2rem;
 }
 
@@ -74,28 +75,35 @@
 
 /* Button */
 .auth-form button {
-  background: var(--amber);
+  width: 100%;
+  background-color: var(--amber);
+  border-radius: 2rem;
   border: none;
-  border-radius: 1rem;
-  padding: 0.9rem;
-  font-size: 1rem;
-  font-weight: 700;
+  padding: 0.6rem;
+  font-weight: 600;
   color: var(--navy-dark);
+  transition: all 0.2s;
   cursor: pointer;
   margin-top: 0.5rem;
-  letter-spacing: 0.3px;
-  transition: 0.2 ease;
+  transition: 0.2s ease;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+
 }
 
 .auth-form button:hover {
-  background-color: #ffb984;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(240, 169, 113, 0.4);
+ transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 24px rgba(224, 130, 68, 0.4);
 }
 
 .auth-form button:active {
   transform: translateY(0);
 }
+
 
 .auth-footer {
   text-align: center;

@@ -8,10 +8,10 @@ function createNavbar() {
             </a>
         </div>
         <div class="nav-links">
-            <a href="../traveller/browsepackages.html" class="nav-link">
+            <a href="../agency/agencydashboard.html" class="nav-link">
             <i class="bi bi-briefcase"></i>My Packages
             </a>
-            <a href="../traveller/travellerpackages.html" class="nav-link">
+            <a href="../agency/createpackage.html" class="nav-link">
             <i class="bi bi-plus-circle"></i>Create</a>
             <a href="my_reviews.html" class="nav-link">
             <i class="bi bi-people"></i>Group Trips</a>

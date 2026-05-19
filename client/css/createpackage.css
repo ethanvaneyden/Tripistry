@@ -1,0 +1,106 @@
+.create-container {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.create-container h2 {
+    color: var(--amber);
+}
+
+.main-details {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    gap: 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+}
+
+.secondary-details {
+    display: flex;
+    padding: 2rem;
+    flex-direction: row;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+
+}
+
+.side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1rem;
+}
+
+.resource-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.resource {
+    display: flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: rgba(255, 255, 255, 0.04);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease-in-out;
+}
+
+.resource:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.resource i {
+    color: var(--amber);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.publish-button {
+    width: 50%;
+
+    background-color: var(--amber);
+    border-radius: 2rem;
+    border: none;
+    padding: 0.6rem;
+    font-weight: 600;
+    color: var(--navy-dark);
+    transition: all 0.2s;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: 0.2s ease;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    transition: 0.2s ease;
+}
+
+.publish-button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 24px rgba(224, 130, 68, 0.4);
+}
