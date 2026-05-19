@@ -8,10 +8,15 @@ function createNavbar() {
             </a>
         </div>
         <div class="nav-links">
-            <a href="browse.html" class="nav-link">Browse</a>
-            <a href="../traveller/travellerpackages.html" class="nav-link">My Bookings</a>
-            <a href="my_reviews.html" class="nav-link">My Reviews</a>
-            <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">Logout</a>
+            <a href="browse.html" class="nav-link">
+            <i class="bi bi-compass"></i>Browse
+            </a>
+            <a href="../traveller/travellerpackages.html" class="nav-link">
+            <i class="bi bi-suitcase-lg"></i>My Bookings</a>
+            <a href="my_reviews.html" class="nav-link">
+            <i class="bi bi-chat-left-heart"></i>My Reviews</a>
+            <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">
+            <i class="bi bi-box-arrow-right"></i>Logout</a>
         </div>
     `;
     highlightActiveLink();
