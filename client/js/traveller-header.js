@@ -13,7 +13,7 @@ function createNavbar() {
             </a>
             <a href="../traveller/travellerpackages.html" class="nav-link">
             <i class="bi bi-suitcase-lg"></i>My Bookings</a>
-            <a href="my_reviews.html" class="nav-link">
+            <a href="../traveller/travellerreviews.html" class="nav-link">
             <i class="bi bi-chat-left-heart"></i>My Reviews</a>
             <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">
             <i class="bi bi-box-arrow-right"></i>Logout</a>

@@ -173,6 +173,10 @@ input::placeholder {
   display: block !important;
 }
 
+.bi {
+  color: var(--amber);
+}
+
 @keyframes slideIn {
   from {
     transform: translateY(-10px);

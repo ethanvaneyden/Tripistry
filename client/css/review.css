@@ -1,0 +1,158 @@
+.review-summary-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: whitesmoke;
+}
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--amber);
+    line-height: 1;
+}
+
+.metric-stars-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+
+
+.review-section {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.review-section h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reviewer-name {
+    color: #1a1a1a;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.reviewer-name-light {
+    color: white;
+    font-weight: 700;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.review-date {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.review-date-light {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+.review-text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #2d3748;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.review-text-light {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+
+.review-bubble {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tag-package {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: grey;
+}
+
+.badge-package {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--amber);
+    padding: 0.4rem 0.8rem;
+    border-radius: 2rem;
+}
+
+.write-review {
+    width: 50%;
+    background-color: var(--amber);
+    border-radius: 2rem;
+    border: none;
+    padding: 0.6rem;
+    font-weight: 600;
+    color: var(--navy-dark);
+    transition: all 0.2s;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: 0.2s ease;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    transition: 0.2s ease;
+}
+
+.reviews-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+}

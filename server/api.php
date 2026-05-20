@@ -6,8 +6,8 @@ header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
 
 $db_host = "127.0.0.1";
 $db_user = "root";
-$db_pass = "";
-$db_name = "";
+$db_pass = "Silver4monsters";
+$db_name = "tripistry";
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 

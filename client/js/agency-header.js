@@ -13,9 +13,9 @@ function createNavbar() {
             </a>
             <a href="../agency/createpackage.html" class="nav-link">
             <i class="bi bi-plus-circle"></i>Create</a>
-            <a href="my_reviews.html" class="nav-link">
+            <a href="../agency/grouptrips.html" class="nav-link">
             <i class="bi bi-people"></i>Group Trips</a>
-            <a href="../index.html" class="nav-link">
+            <a href="../agency/agencyreviews.html" class="nav-link">
             <i class="bi bi-chat-left-quote"></i></i>Reviews</a>
             <a href="../index.html" id="logoutBtn" class="nav-link logout-btn">
             <i class="bi bi-box-arrow-right"></i>Logout</a>
