@@ -1,113 +1,526 @@
-[
-  [
+{
+  "api": "Tripistry",
+  
+  "endpoints": [
+
     {
-      "email": "traveler@up.ac.za",
-      "password": "mySecurePassword"
+      "section": "Auth",
+      "name": "Login",
+      "method": "POST",
+      "endpoint": "/api/auth/login.php",
+      "note": "role field tells PHP which table to query. Use 'traveller' or 'agency'.",
+      "request": {
+        "email": "traveler@up.ac.za",
+        "password": "mySecurePassword",
+        "role": "traveller"
+      },
+      "response_success": {
+        "success": true,
+        "role": "traveller",
+        "user": {
+          "id": 1,
+          "firstName": "John",
+          "surname": "Doe",
+          "email": "traveler@up.ac.za"
+        }
+      },
+      "response_error": {
+        "success": false,
+        "error": "Invalid email or password"
+      }
     },
+
     {
-      "name": "Rochaan",
-      "surname": "Surname",
-      "email": "rochaan@example.com",
-      "password": "secretPassword",
-      "phone": "0821234567",
-      "nationality": "South African",
-      "dateofbirth": "2003-04-12"
+      "section": "Traveller",
+      "name": "Register Traveller",
+      "method": "POST",
+      "endpoint": "/api/travellers/register.php",
+      "request": {
+        "name": "Rochaan",
+        "surname": "Surname",
+        "email": "rochaan@example.com",
+        "password": "secretPassword",
+        "phone": "0821234567",
+        "nationality": "South African",
+        "dateofbirth": "2003-04-12"
+      },
+      "response_success": {
+        "success": true,
+        "travellerID": 2,
+        "message": "Account created successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Email already in use"
+      }
     },
+
     {
-      "name": "Tripistry Pretoria",
-      "email": "pretoria@tripistry.com",
-      "password": "agencyPassword",
-      "phone": "0123456789",
-      "street": "Lynnwood Road",
-      "city": "Pretoria",
-      "country": "South Africa"
+      "section": "Traveller",
+      "name": "Get Traveller Profile",
+      "method": "GET",
+      "endpoint": "/api/travellers/profile.php?id=1",
+      "params": {
+        "id": 1
+      },
+      "response_success": {
+        "success": true,
+        "data": {
+          "travellerID": 1,
+          "firstName": "John",
+          "surname": "Doe",
+          "email": "traveler@up.ac.za",
+          "phone": null,
+          "nationality": "South African",
+          "joinDate": "2026-05-12"
+        }
+      },
+      "response_error": {
+        "success": false,
+        "error": "Traveller not found"
+      }
+    },
+
+    {
+      "section": "Agency",
+      "name": "Register Agency",
+      "method": "POST",
+      "endpoint": "/api/agencies/register.php",
+      "request": {
+        "name": "Tripistry Pretoria",
+        "email": "pretoria@tripistry.com",
+        "password": "agencyPassword",
+        "phone": "0123456789",
+        "street": "Lynnwood Road",
+        "city": "Pretoria",
+        "country": "South Africa"
+      },
+      "response_success": {
+        "success": true,
+        "agencyID": 3,
+        "message": "Agency registered successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Email already in use"
+      }
+    },
+
+    {
+      "section": "Agency",
+      "name": "Get Agency Profile",
+      "method": "GET",
+      "endpoint": "/api/agencies/profile.php?id=2",
+      "params": {
+        "id": 2
+      },
+      "response_success": {
+        "success": true,
+        "data": {
+          "agencyID": 2,
+          "name": "Wanderlust SA Ltd",
+          "email": "info@wanderlust.co.za",
+          "phone": "+27123456789",
+          "street": null,
+          "city": null,
+          "country": "South Africa",
+          "joinDate": "2026-05-12"
+        }
+      },
+      "response_error": {
+        "success": false,
+        "error": "Agency not found"
+      }
+    },
+
+    {
+      "section": "Packages",
+      "name": "List & Filter Packages",
+      "method": "GET",
+      "endpoint": "/api/packages/list.php",
+      "note": "All params are optional. Used for browse, search, sort and filter on traveller side.",
+      "params": {
+        "destination": "Cape Town",
+        "minPrice": 5000,
+        "maxPrice": 20000,
+        "startDate": "2026-06-01",
+        "duration": 7,
+        "sortBy": "price",
+        "sortOrder": "ASC",
+        "page": 1,
+        "limit": 10
+      },
+      "response_success": {
+        "success": true,
+        "total": 42,
+        "page": 1,
+        "data": [
+          {
+            "packageID": 1,
+            "title": "Ultimate Cape Town Coastal Escape",
+            "description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
+            "totalPrice": 14500,
+            "startDate": "2026-06-15",
+            "endDate": "2026-06-22",
+            "maxParticipants": 12,
+            "agencyName": "Wanderlust SA Ltd",
+            "avgRating": 4.7,
+            "reviewCount": 12,
+            "thumbnailURL": "https://example.com/images/cape-town.jpg"
+          }
+        ]
+      },
+      "response_error": {
+        "success": false,
+        "error": "Invalid filter parameters"
+      }
+    },
+
+    {
+      "section": "Packages",
+      "name": "Get Package Detail",
+      "method": "GET",
+      "endpoint": "/api/packages/get.php?id=1",
+      "note": "Returns full detail with joined destinations, accommodations, flights (with airport names), attractions, restaurants and reviews.",
+      "params": {
+        "id": 1
+      },
+      "response_success": {
+        "success": true,
+        "data": {
+          "packageID": 1,
+          "title": "Ultimate Cape Town Coastal Escape",
+          "description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
+          "totalPrice": 14500,
+          "startDate": "2026-06-15",
+          "endDate": "2026-06-22",
+          "maxParticipants": 12,
+          "agency": {
+            "agencyID": 2,
+            "name": "Wanderlust SA Ltd",
+            "email": "info@wanderlust.co.za",
+            "phone": "+27123456789"
+          },
+          "destinations": [
+            {
+              "destinationID": 1,
+              "name": "Cape Town Waterfront",
+              "city": "Cape Town",
+              "country": "South Africa"
+            }
+          ],
+          "accommodations": [
+            {
+              "accommodationID": 12,
+              "name": "Hout Bay Beachfront Hotel",
+              "type": "Hotel",
+              "starRating": 4,
+              "avgPricePerNight": 1850,
+              "street": "12 Beach Road",
+              "city": "Cape Town",
+              "country": "South Africa"
+            }
+          ],
+          "flights": [
+            {
+              "flightID": 45,
+              "flightNumber": "FA201",
+              "airline": "FlySafair",
+              "departureDateTime": "2026-06-15 06:00:00",
+              "arrivalDateTime": "2026-06-15 08:10:00",
+              "baseCost": 1200,
+              "origin": {
+                "code": "JNB",
+                "name": "OR Tambo International",
+                "city": "Johannesburg"
+              },
+              "destination": {
+                "code": "CPT",
+                "name": "Cape Town International",
+                "city": "Cape Town"
+              }
+            }
+          ],
+          "attractions": [
+            {
+              "attractionID": 1,
+              "name": "Table Mountain Cableway",
+              "description": "Aerial cableway with views of the city.",
+              "entranceFee": 420,
+              "openingHours": "08:00 - 19:00",
+              "city": "Cape Town",
+              "country": "South Africa"
+            }
+          ],
+          "restaurants": [
+            {
+              "restaurantID": 1,
+              "name": "The Mariner's Wharf",
+              "cuisine": "Seafood",
+              "priceRange": "$$$",
+              "city": "Cape Town",
+              "country": "South Africa"
+            }
+          ],
+          "reviews": [
+            {
+              "reviewID": 1,
+              "travellerName": "Alice M.",
+              "rating": 5,
+              "comment": "Incredible coordination! Had an amazing time in Hout Bay.",
+              "createdAt": "2026-05-01 14:22:10"
+            }
+          ]
+        }
+      },
+      "response_error": {
+        "success": false,
+        "error": "Package not found"
+      }
+    },
+
+    {
+      "section": "Packages",
+      "name": "Create Package",
+      "method": "POST",
+      "endpoint": "/api/packages/create.php",
+      "note": "Agency only. Pass arrays of IDs to link destinations, accommodations, flights, attractions and restaurants.",
+      "request": {
+        "agencyID": 2,
+        "title": "Ultimate Cape Town Coastal Escape",
+        "description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
+        "startDate": "2026-06-15",
+        "endDate": "2026-06-22",
+        "maxParticipants": 12,
+        "totalPrice": 14500,
+        "destinationIDs": [1],
+        "accommodationIDs": [12],
+        "flightIDs": [45],
+        "attractionIDs": [1],
+        "restaurantIDs": [1]
+      },
+      "response_success": {
+        "success": true,
+        "packageID": 2,
+        "message": "Package created successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Unauthorized or missing required fields"
+      }
+    },
+
+    {
+      "section": "Packages",
+      "name": "Update Package",
+      "method": "PUT",
+      "endpoint": "/api/packages/update.php",
+      "note": "Agency only. Only send the fields you want to change.",
+      "request": {
+        "packageID": 1,
+        "agencyID": 2,
+        "totalPrice": 13000,
+        "description": "Updated description for the Cape Town escape."
+      },
+      "response_success": {
+        "success": true,
+        "message": "Package updated successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Unauthorized or package not found"
+      }
+    },
+
+    {
+      "section": "Packages",
+      "name": "Delete Package",
+      "method": "DELETE",
+      "endpoint": "/api/packages/delete.php",
+      "note": "Agency only. Verify agencyID owns the package before deleting.",
+      "request": {
+        "packageID": 1,
+        "agencyID": 2
+      },
+      "response_success": {
+        "success": true,
+        "message": "Package deleted successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Unauthorized or package not found"
+      }
+    },
+
+    {
+      "section": "Bookings",
+      "name": "Book a Package",
+      "method": "POST",
+      "endpoint": "/api/bookings/create.php",
+      "note": "totalPrice should be calculated client-side as numberOfPeople * package TotalPrice.",
+      "request": {
+        "travellerID": 1,
+        "packageID": 1,
+        "numberOfPeople": 2,
+        "totalPrice": 29000
+      },
+      "response_success": {
+        "success": true,
+        "bookingID": 5,
+        "status": "Pending",
+        "message": "Booking created successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Package is fully booked"
+      }
+    },
+
+    {
+      "section": "Bookings",
+      "name": "Get Traveller Bookings",
+      "method": "GET",
+      "endpoint": "/api/bookings/list.php?travellerID=1",
+      "params": {
+        "travellerID": 1
+      },
+      "response_success": {
+        "success": true,
+        "data": [
+          {
+            "bookingID": 1,
+            "packageTitle": "Ultimate Cape Town Coastal Escape",
+            "agencyName": "Wanderlust SA Ltd",
+            "date": "2026-05-12 14:37:55",
+            "numberOfPeople": 1,
+            "status": "Confirmed",
+            "totalPrice": 15500
+          }
+        ]
+      },
+      "response_error": {
+        "success": false,
+        "error": "Traveller not found"
+      }
+    },
+
+    {
+      "section": "Reviews",
+      "name": "Submit Package Review",
+      "method": "POST",
+      "endpoint": "/api/reviews/package.php",
+      "note": "One review per traveller per package enforced by unique key in DB.",
+      "request": {
+        "travellerID": 1,
+        "packageID": 1,
+        "rating": 5,
+        "comment": "Incredible coordination! Had an amazing time in Hout Bay."
+      },
+      "response_success": {
+        "success": true,
+        "reviewID": 3,
+        "message": "Review submitted successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "You have already reviewed this package"
+      }
+    },
+
+    {
+      "section": "Reviews",
+      "name": "Submit Agency Review",
+      "method": "POST",
+      "endpoint": "/api/reviews/agency.php",
+      "note": "One review per traveller per agency enforced by unique key in DB.",
+      "request": {
+        "travellerID": 1,
+        "agencyID": 1,
+        "rating": 4,
+        "comment": "Great service, very responsive agency."
+      },
+      "response_success": {
+        "success": true,
+        "reviewID": 2,
+        "message": "Review submitted successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "You have already reviewed this agency"
+      }
+    },
+
+    {
+      "section": "Group Trips",
+      "name": "Create Group Trip",
+      "method": "POST",
+      "endpoint": "/api/grouptrips/create.php",
+      "note": "Agency only. Status defaults to 'Open' in the DB.",
+      "request": {
+        "agencyID": 2,
+        "maxCapacity": 20,
+        "startDate": "2026-07-10",
+        "endDate": "2026-07-17"
+      },
+      "response_success": {
+        "success": true,
+        "groupTripID": 4,
+        "status": "Open",
+        "message": "Group trip created successfully"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Unauthorized or invalid dates"
+      }
+    },
+
+    {
+      "section": "Group Trips",
+      "name": "List Open Group Trips",
+      "method": "GET",
+      "endpoint": "/api/grouptrips/list.php?status=Open",
+      "params": {
+        "status": "Open"
+      },
+      "response_success": {
+        "success": true,
+        "data": [
+          {
+            "groupTripID": 4,
+            "agencyName": "Wanderlust SA Ltd",
+            "maxCapacity": 20,
+            "currentMembers": 5,
+            "status": "Open",
+            "startDate": "2026-07-10",
+            "endDate": "2026-07-17"
+          }
+        ]
+      },
+      "response_error": {
+        "success": false,
+        "error": "Invalid status value"
+      }
+    },
+
+    {
+      "section": "Group Trips",
+      "name": "Join Group Trip",
+      "method": "POST",
+      "endpoint": "/api/grouptrips/join.php",
+      "note": "PHP must check current member count against maxCapacity before inserting.",
+      "request": {
+        "groupTripID": 4,
+        "travellerID": 1
+      },
+      "response_success": {
+        "success": true,
+        "message": "Successfully joined group trip"
+      },
+      "response_error": {
+        "success": false,
+        "error": "Group trip is full"
+      }
     }
-  ],
-  [
-    {
-      "PackageID": 1,
-      "AgencyName": "Wanderlust SA Ltd",
-      "Title": "Ultimate Cape Town Coastal Escape",
-      "Description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
-      "StartDate": "2026-06-15",
-      "EndDate": "2026-06-22",
-      "MaxParticipants": 12,
-      "TotalPrice": 14500
-    }
-  ],
-  {
-    "PackageID": 1,
-    "Title": "Ultimate Cape Town Coastal Escape",
-    "Description": "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
-    "TotalPrice": 14500,
-    "StartDate": "2026-06-15",
-    "EndDate": "2026-06-22",
-    "Agency": {
-      "AgencyID": 2,
-      "Name": "Wanderlust SA Ltd",
-      "Email": "info@wanderlust.co.za",
-      "Phone": "+27123456789"
-    },
-    "Destinations": [
-      {
-        "DestinationID": 1,
-        "Name": "Cape Town Waterfront",
-        "City": "Cape Town",
-        "Country": "South Africa"
-      }
-    ],
-    "Accommodations": [
-      {
-        "AccommodationID": 12,
-        "Name": "Hout Bay Beachfront Hotel",
-        "Type": "Hotel",
-        "StarRating": 4,
-        "AveragePricePerNight": 1850,
-        "Street": "12 Beach Road",
-        "City": "Cape Town",
-        "Country": "South Africa"
-      }
-    ],
-    "Flights": [
-      {
-        "FlightID": 45,
-        "FlightNumber": "FA201",
-        "Airline": "FlySafair",
-        "DepartureDateTime": "2026-06-15 06:00:00",
-        "ArrivalDateTime": "2026-06-15 08:10:00",
-        "BaseCost": 1200,
-        "OriginAirportID": 1,
-        "DestinationAirportID": 2
-      }
-    ],
-    "Attractions": [
-      {
-        "AttractionID": 1,
-        "Name": "Table Mountain Cableway",
-        "EntranceFee": 420,
-        "OpeningHours": "08:00 - 19:00",
-        "City": "Cape Town",
-        "Country": "South Africa"
-      }
-    ],
-    "Restaurants": [
-      {
-        "RestaurantID": 1,
-        "Name": "The Mariner's Wharf",
-        "Cuisine": "Seafood",
-        "PriceRange": "$$$",
-        "City": "Cape Town",
-        "Country": "South Africa"
-      }
-    ],
-    "Reviews": [
-      {
-        "ReviewID": 1,
-        "TravellerName": "Alice",
-        "Rating": 5,
-        "Comment": "Incredible coordination! Had an amazing time in Hout Bay.",
-        "CreatedAt": "2026-05-01 14:22:10"
-      }
-    ]
-  }
-]
+
+  ]
+}
