@@ -1,5 +1,4 @@
 @import 'globals.css';
-@import 'cards.css';
 @import 'text.css';
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
@@ -20,6 +19,15 @@ body {
   background-repeat: no-repeat;
   padding: 1rem;
   position: relative;
+}
+
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
 }
 
 body::before {
@@ -52,7 +60,7 @@ img {
 
 input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 1rem;
   padding: 0.9rem 1.2rem;
@@ -61,12 +69,13 @@ input {
 }
 
 select {
-  color: whitesmoke;
-  background: rgba(255, 255, 255, 0.1);
+  width: 100%;
+  background: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 0.5rem;
-  padding: 0.5rem 2rem 0.5rem 0.5rem;
-  font-size: 0.9rem;
+  border-radius: 1rem;
+  padding: 0.9rem 1.2rem;
+  color: whitesmoke;
+  font-size: 0.95rem;
   cursor: pointer;
   outline: none;
   appearance: none;
@@ -143,4 +152,35 @@ input::placeholder {
 .concept-current {
   color: #e08244;
   font-weight: 600;
+}
+
+.error-container {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  background: rgba(255, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  display: none;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.error-visible {
+  display: block !important;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
