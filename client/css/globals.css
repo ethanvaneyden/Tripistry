@@ -9,8 +9,17 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
   --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
 
-  /* Glassmorphism defaults */
+  --panel-bg: rgba(255, 255, 255, 0.04);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --panel-radius: 1rem;
+  --panel-padding: 1.5rem;
+  --panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+
+  --btn-radius: 2rem;
+  --btn-transition: all 0.2s ease-in-out;
+
   --glass-bg: rgba(0, 41, 107, 0.65);
   --glass-border: rgba(255, 255, 255, 0.2);
-
 }
+
+

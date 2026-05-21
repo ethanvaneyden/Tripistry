@@ -16,15 +16,6 @@
     padding: 2rem;
 }
 
-.trips-section h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--amber);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
 .capacity-tracker {
     display: flex;
     flex-direction: column;
