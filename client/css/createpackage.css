@@ -35,6 +35,7 @@
 .secondary-details {
     display: flex;
     gap: 1rem;
+    flex-direction: column;
 }
 
 .side-by-side {
@@ -72,6 +73,19 @@
     border-color: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.date-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.date-group i {
+     color: var(--amber);
+    font-size: 1.2rem;
+    font-weight: 600;
 }
 
 .resource i {

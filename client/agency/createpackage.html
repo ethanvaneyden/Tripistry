@@ -40,14 +40,23 @@
         </div>
 
         <div class="secondary-details">
-          <input type="date" placeholder="Start Date" id="startDateInput" />
-          <input type="date" placeholder="End Date" id="endDateInput" />
+          <div class="date-group">
+            <input type="date" placeholder="Start Date" id="startDateInput" />
+            <i class="bi bi-arrow-right-circle"></i>
+            <input type="date" placeholder="End Date" id="endDateInput" />
+          </div>
           <input
             type="number"
             placeholder="Max Participants"
             id="maxParticipantsInput"
+            min="0"
           />
-          <input type="number" placeholder="Total Price" id="priceInput" />
+          <input
+            type="number"
+            placeholder="Total Price"
+            id="priceInput"
+            min="0"
+          />
         </div>
 
         <h2 class="section-title">Link Resources</h2>
@@ -74,7 +83,9 @@
             </button>
           </div>
         </div>
-        <button class="publish-button" id="publishPackage">Publish package</button>
+        <button class="publish-button" id="publishPackage">
+          Publish package
+        </button>
       </section>
     </main>
   </body>
