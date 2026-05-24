@@ -559,7 +559,7 @@ if ($method === 'POST' && strpos($uri, '/api/reviews/agency') !== false) {
         respond(201, ["success" => true, "reviewID" => (int)$pdo->lastInsertId(), "message" => "Review submitted successfully"]);
     } catch (PDOException $e) {
         $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "You have already reviewed this agency" : "Review failed: " . $e->getMessage();
+        $msg  = $e->getCode() == 23000 ? "Duplicate reviews are not allowed" : "Review failed: " . $e->getMessage();
         respond($code, ["success" => false, "error" => $msg]);
     }
 }
