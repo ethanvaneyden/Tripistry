@@ -240,25 +240,25 @@
     margin-bottom: 1.5rem;
 }
 
-.stars {
+.stars-review {
     display: flex;
     flex-direction: row-reverse;
     gap: 0.6rem;
 }
 
-.stars label {
+.stars-review label {
     color: rgba(255, 255, 255, 0.25);
     cursor: pointer;
     transition: color 0.15s ease;
 }
 
-.stars input:checked~label,
-.stars label:hover,
-.stars label:hover~label {
+.stars-review input:checked~label,
+.stars-review label:hover,
+.stars-review label:hover~label {
     color: var(--amber);
 }
 
-.stars input {
+.stars-review input {
     display: none;
 }
 
