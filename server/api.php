@@ -628,7 +628,7 @@ if ($method === 'POST' && strpos($uri, '/api/grouptrips/join') !== false) {
     ");
     $cap->execute([':id' => $data['groupTripID']]);
     $capRow = $cap->fetch();
-    if (!$capRow) respond(404, ["success" => false, "error" => "Group trip not found"]);
+    if (!$capRow) respond(404, ["success" => false, "error" => "Group trip does not exist"]);
     if ($capRow['Status'] !== 'Open') respond(409, ["success" => false, "error" => "Group trip is not open for joining"]);
     if ($capRow['members'] >= $capRow['MaxCapacity']) respond(409, ["success" => false, "error" => "Group trip is full"]);
 
