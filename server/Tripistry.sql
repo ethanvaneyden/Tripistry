@@ -19,7 +19,7 @@
 DROP DATABASE IF EXISTS `tripistry`;
 CREATE DATABASE IF NOT EXISTS `tripistry` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
 USE `tripistry`;
-e
+
 -- Dumping structure for table triptest.accommodation
 DROP TABLE IF EXISTS `accommodation`;
 CREATE TABLE IF NOT EXISTS `accommodation` (
