@@ -1,107 +1,173 @@
-const packagesection = document.getElementById('package-section');
+const API_BASE = 'http://localhost/Tripistry/server/api.php';
 
-const packages = [];
+const packageSection = document.getElementById('package-section');
 
+// --- Filter / sort elements ---
+const searchInput    = document.getElementById('search');
+const priceSelect    = document.getElementById('filter-price');
+const ratingSelect   = document.getElementById('filter-rating');
+const durationSelect = document.getElementById('filter-duration');
+const sortSelect     = document.getElementById('filter-sort');
 
-packages.push({
-    PackageID: 1,
-    AgencyName: "Wanderlust SA Ltd",
-    Title: "Ultimate Cape Town Coastal Escape",
-    Description: "A beautiful getaway featuring coastal sights, wine tasting, and premium dining.",
-    StartDate: "2026-06-15",
-    EndDate: "2026-06-22",
-    MaxParticipants: 12,
-    TotalPrice: 14500.00,
-    ThumbnailURL: "https://newplacestogo.com/wp-content/uploads/2023/02/bartinney-2-min-scaled.jpg",
-    Location: 'Cape Town, South Africa'
-});
+// -----------------------------------------------------------------------
+// Fetch packages from the API
+// -----------------------------------------------------------------------
+async function fetchPackages() {
+    const body = {
+        search:   searchInput.value.trim(),
+        price:    priceSelect.value,
+        rating:   ratingSelect.value ? parseInt(ratingSelect.value) : 0,
+        duration: durationSelect.value,
+        sort:     sortSelect.value || 'recommended',
+    };
 
-packages.push({
-    PackageID: 2,
-    AgencyName: "Safari Specialists",
-    Title: "Wild Kruger Luxury Safari",
-    Description: "Experience the Big Five with luxury lodge stays and guided game drives.",
-    StartDate: "2026-07-01",
-    EndDate: "2026-07-06",
-    MaxParticipants: 8,
-    TotalPrice: 22000.00,
-    ThumbnailURL: "https://images.unsplash.com/photo-1516426122078-c23e76319801",
-    Location: 'Kruger National Park, South Africa'
-});
+    try {
+        const res  = await fetch(`${API_BASE}/api/packages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify(body),
+        });
+        const data = await res.json();
 
-// 3. Paris City Break
-packages.push({
-    PackageID: 3,
-    AgencyName: "EuroQuest Travels",
-    Title: "Parisian Romance & Culture",
-    Description: "A curated tour of the Louvre, Eiffel Tower, and hidden bistros in Montmartre.",
-    StartDate: "2026-09-10",
-    EndDate: "2026-09-15",
-    MaxParticipants: 10,
-    TotalPrice: 35000.00,
-    ThumbnailURL: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
-    Location: 'Paris, France'
+        if (!res.ok) {
+            showError(data.error || 'Failed to load packages.');
+            return;
+        }
 
-});
+        renderPackages(data.packages);
+    } catch (err) {
+        showError('Could not connect to the server. Please try again.');
+    }
+}
 
-packages.push({
-    PackageID: 4,
-    AgencyName: "Pacific Dream Tours",
-    Title: "Ubud Zen & Wellness Escape",
-    Description: "Rejuvenate with daily yoga, traditional spa treatments, and rice terrace tours.",
-    StartDate: "2026-08-20",
-    EndDate: "2026-08-28",
-    MaxParticipants: 15,
-    TotalPrice: 18500.00,
-    ThumbnailURL: "https://images.unsplash.com/photo-1537996194471-e657df975ab4",
-    Location: 'Bali, Indonesia'
-});
+// -----------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
-function createCard(imageURL, title, location, description, dateString, price, agencyName) {
-    const card = document.createElement('div');
+function formatPrice(price) {
+    return new Intl.NumberFormat('en-ZA', {
+        style: 'currency', currency: 'ZAR', maximumFractionDigits: 0
+    }).format(price);
+}
+
+function renderStars(rating) {
+    const full  = Math.round(rating);
+    let stars   = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += i <= full ? '★' : '☆';
+    }
+    return stars;
+}
+
+function locationLabel(pkg) {
+    const city    = pkg.City    || '';
+    const country = pkg.Country || '';
+    if (city && country) return `${city}, ${country}`;
+    return city || country || 'Unknown destination';
+}
+
+// -----------------------------------------------------------------------
+// Create a package card element
+// -----------------------------------------------------------------------
+function createCard(pkg) {
+    const card      = document.createElement('div');
+    const nights    = pkg.Nights    || 0;
+    const avgRating = parseFloat(pkg.AvgRating) || 0;
+    const reviewCount = parseInt(pkg.ReviewCount) || 0;
+    const thumbnail = pkg.ThumbnailURL
+        || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600';
+
     card.classList.add('package-card');
     card.innerHTML = `
-          <img
+        <img
             class="package-image"
-            src="${imageURL}"
-            alt="Package picture"
-
-          />
-          <div class="card-content">
-            <h2 class="card-title">${title}</h2>
-            <h3 class="card-destination">${location}</h3>
-            <p class="card-description">
-              ${description}
-            </p>
-
+            src="${thumbnail}"
+            alt="${pkg.Title}"
+            onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600'"
+        />
+        <div class="card-content">
+            <h2 class="card-title">${pkg.Title}</h2>
+            <h3 class="card-destination">${locationLabel(pkg)}</h3>
+            <p class="card-description">${pkg.Description || ''}</p>
             <ul class="card-meta">
-              <li class="card-date">${dateString} <small>(7 nights)</small></li>
-              <li class="card-price">R${price} <small>/ person</small></li>
-              <li class="card-agency">Offered by ${agencyName}</li>
-              <li class="rating">
-                <span class="stars">★★★★☆</span>
-                <span>4.7</span>
-              </li>
+                <li class="card-date">
+                    ${formatDate(pkg.StartDate)}
+                    <small>(${nights} night${nights !== 1 ? 's' : ''})</small>
+                </li>
+                <li class="card-price">
+                    ${formatPrice(pkg.TotalPrice)} <small>/ person</small>
+                </li>
+                <li class="card-agency">Offered by ${pkg.AgencyName}</li>
+                <li class="rating">
+                    <span class="stars">${renderStars(avgRating)}</span>
+                    <span>${avgRating > 0 ? avgRating.toFixed(1) : 'No reviews'}</span>
+                    ${reviewCount > 0 ? `<small>(${reviewCount})</small>` : ''}
+                </li>
             </ul>
-            <a href="packagedetails.html" class="btn-outline">
-              View package<i class="bi bi-chevron-double-right"></i>
-            </a>`;
+            <a href="packagedetails.html?id=${pkg.PackageID}" class="btn-outline">
+                View package <i class="bi bi-chevron-double-right"></i>
+            </a>
+        </div>`;
     return card;
 }
 
-async function renderPackages(packages) {
-    packages.forEach(package => {
-        const card = createCard(package.ThumbnailURL,
-            package.Title,
-            package.Location,
-            package.Description,
-            '15-22 June',
-            package.TotalPrice,
-            package.AgencyName)
-        packagesection.appendChild(card);
+// -----------------------------------------------------------------------
+// Render helpers
+// -----------------------------------------------------------------------
+function renderPackages(packages) {
+    packageSection.innerHTML = '';
 
-    });
+    if (!packages || packages.length === 0) {
+        packageSection.innerHTML = `
+            <div class="no-results">
+                <i class="bi bi-search" style="font-size:2rem; color:var(--amber)"></i>
+                <p>No packages match your search. Try adjusting your filters.</p>
+            </div>`;
+        return;
+    }
+
+    packages.forEach(pkg => packageSection.appendChild(createCard(pkg)));
 }
 
-renderPackages(packages);
+function showError(message) {
+    packageSection.innerHTML = `
+        <div class="no-results">
+            <i class="bi bi-exclamation-circle" style="font-size:2rem; color:#e05555"></i>
+            <p>${message}</p>
+        </div>`;
+}
 
+function showLoading() {
+    packageSection.innerHTML = `
+        <div class="no-results">
+            <i class="bi bi-arrow-repeat" style="font-size:2rem; color:var(--amber)"></i>
+            <p>Loading packages…</p>
+        </div>`;
+}
+
+// -----------------------------------------------------------------------
+// Debounce for search input
+// -----------------------------------------------------------------------
+let debounceTimer;
+function debounce(fn, delay = 350) {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fn, delay);
+}
+
+// -----------------------------------------------------------------------
+// Wire up filter controls
+// -----------------------------------------------------------------------
+searchInput.addEventListener('input',    () => debounce(() => { showLoading(); fetchPackages(); }));
+priceSelect.addEventListener('change',   () => { showLoading(); fetchPackages(); });
+ratingSelect.addEventListener('change',  () => { showLoading(); fetchPackages(); });
+durationSelect.addEventListener('change',() => { showLoading(); fetchPackages(); });
+sortSelect.addEventListener('change',    () => { showLoading(); fetchPackages(); });
+
+// --- Initial load ---
+showLoading();
+fetchPackages();

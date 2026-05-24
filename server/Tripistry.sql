@@ -17,7 +17,7 @@
 
 -- Dumping database structure for tripistry
 DROP DATABASE IF EXISTS `tripistry`;
-CREATE DATABASE IF NOT EXISTS `tripistry` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
+CREATE DATABASE IF NOT EXISTS `tripistry` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 USE `tripistry`;
 
 -- Dumping structure for table tripistry.accommodation
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `attractionimage` (
   PRIMARY KEY (`ImageID`),
   KEY `fk_attrimage_attr` (`AttractionID`),
   CONSTRAINT `fk_attrimage_attr` FOREIGN KEY (`AttractionID`) REFERENCES `attraction` (`AttractionID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
@@ -365,7 +365,7 @@ CREATE TABLE IF NOT EXISTS `restaurantimage` (
   PRIMARY KEY (`ImageID`),
   KEY `fk_restimage_rest` (`RestaurantID`),
   CONSTRAINT `fk_restimage_rest` FOREIGN KEY (`RestaurantID`) REFERENCES `restaurant` (`RestaurantID`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data exporting was unselected.
 
