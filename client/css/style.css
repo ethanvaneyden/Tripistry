@@ -1,5 +1,4 @@
 @import 'globals.css';
-@import 'cards.css';
 @import 'text.css';
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
@@ -22,6 +21,15 @@ body {
   position: relative;
 }
 
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -34,25 +42,47 @@ body::before {
   z-index: 0;
 }
 
-
-
-/* Headings & Hero Titles */
-h1,
-h2,
-h3 {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.panel-base,
+.main-details,
+.secondary-details,
+.side-by-side,
+.review-summary-dashboard,
+.metric-card,
+.review-bubble,
+.group-trip-card,
+.info-card,
+.highlight-item,
+.booking-widget {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
 }
 
-img {
-  max-width: 100%;
-  display: block;
-}
-
-input {
+button,
+.btn-outline,
+.btn-reserve {
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background-color: var(--amber);
+  border-radius: 2rem;
+  border: none;
+  padding: 0.6rem;
+  font-weight: 600;
+  color: var(--navy-dark);
+  transition: 0.2s ease;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+
+.input-base,
+input,
+select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 1rem;
   padding: 0.9rem 1.2rem;
@@ -61,12 +91,6 @@ input {
 }
 
 select {
-  color: whitesmoke;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 0.5rem;
-  padding: 0.5rem 2rem 0.5rem 0.5rem;
-  font-size: 0.9rem;
   cursor: pointer;
   outline: none;
   appearance: none;
@@ -78,17 +102,56 @@ select option {
   padding: 10px;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: none;
-  border-color: var(--yellow-dark);
+  border-color: #f4a261;
   background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 0 0 3px rgba(253, 197, 0, 0.3);
 }
 
-input::placeholder {
+input::placeholder,
+.auth-form input::placeholder {
   color: lightgray;
   opacity: 1;
 }
+
+/* Headings & Hero Titles */
+h1,
+h2,
+h3 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-title,
+.section-title-left {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-title-left {
+  justify-content: flex-start;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.navy-icon {
+  color: var(--navy-dark);
+}
+
+.amber-icon {
+  color: var(--amber);
+}
+
 
 .auth-container .logo {
   height: 96px;
@@ -143,4 +206,35 @@ input::placeholder {
 .concept-current {
   color: #e08244;
   font-weight: 600;
+}
+
+.error-container {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  background: rgba(255, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  display: none;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.error-visible {
+  display: block !important;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

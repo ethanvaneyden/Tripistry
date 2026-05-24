@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Group Trips</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/nav.css" rel="stylesheet" />
+    <link href="../css/packages.css" rel="stylesheet" />
+    <link href="../css/grouptrips.css" rel="stylesheet" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
+
+  <body>
+    <header>
+      <nav class="navbar" id="navbar"></nav>
+    </header>
+    <main>
+      <div class="breadcrumb">
+        <a href="#" class="concept-link">Agency Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="concept-current">Group Trips</span>
+      </div>
+
+      <div class="side-by-side">
+        <aside class="filter-toolbar clear-glass">
+          <h2 class="section-title"><i class="bi bi-sliders"></i> Filter Groups</h2>
+          <div class="search">
+            <input type="text" placeholder="Search Group ID..." />
+          </div>
+          <div class="select-wrapper">
+            <select required title="Statis">
+              <option value="" disabled selected hidden>Status</option>
+              <option>Upcoming</option>
+              <option>Fully Booked</option>
+            </select>
+          </div>
+        </aside>
+
+        <section class="trips-section clear-glass">
+          <h2 class="section-title-left">Active Group Expeditions</h2>
+          <div class="group-trip-card clear-glass">
+            <div class="group-info">
+              <h3>Kruger Luxury Safari — June 2026</h3>
+              <span class="group-id">ID: GRP-9924</span>
+            </div>
+
+            <div class="capacity-tracker">
+              <div class="tracker-labels">
+                <span>Seats Filled</span>
+                <span>8 / 12</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 66%"></div>
+              </div>
+            </div>
+
+            <a href="managegroup.php?id=9924" class="btn-outline"
+              >Manage Group</a
+            >
+          </div>
+
+          <div class="group-trip-card clear-glass">
+            <div class="group-info">
+              <h3>Cape Town — July 2026</h3>
+              <span class="group-id">ID: GRP-1231</span>
+            </div>
+
+            <div class="capacity-tracker">
+              <div class="tracker-labels">
+                <span>Seats Filled</span>
+                <span>6 / 20</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: 30%"></div>
+              </div>
+            </div>
+
+            <a href="managegroup.php?id=9924" class="btn-outline"
+              >Manage Group</a
+            >
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+  <script src="../js/agency-header.js"></script>
+  <script src="../js/agency-packages.js"></script>
+</html>

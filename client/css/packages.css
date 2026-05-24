@@ -10,13 +10,11 @@
     align-content: start;
 }
 
-main {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2.5rem 0 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
+.side-by-side{
+    display: grid;
+    align-items: start;
+    grid-template-columns: 300px 1fr;
+    gap: 3rem;
 }
 
 .package-card {
@@ -121,10 +119,9 @@ main {
     padding: 0.6rem;
     font-weight: 600;
     color: var(--navy-dark);
-    transition: all 0.2s;
+    transition: 0.2s ease;
     cursor: pointer;
     margin-top: 0.5rem;
-    transition: 0.2s ease;
     display: flex;
     gap: 0.5rem;
     justify-content: center;
@@ -145,28 +142,25 @@ main {
 
 .filter-toolbar {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: left;
+    flex-direction: column;
+    align-items: stretch;
+    height: fit-content;
     padding: 2rem;
+    gap: 1.5rem;
+    position: sticky;
+    top: 20vh;
 }
 
 .search {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 0.6rem;
 }
 
-.filter-group {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
 
 .select-wrapper {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 0.6rem;
 }
@@ -183,6 +177,7 @@ main {
     border-color: var(--amber);
 }
 
-.search input {
-    width: 250px;
+.toolbar-select {
+    width: 100%;
 }
+

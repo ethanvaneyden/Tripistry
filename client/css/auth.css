@@ -82,16 +82,14 @@
   padding: 0.6rem;
   font-weight: 600;
   color: var(--navy-dark);
-  transition: all 0.2s;
+  transition: 0.2s ease;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: 0.2s ease;
   display: flex;
   gap: 0.5rem;
   justify-content: center;
   align-items: center;
   margin: auto;
-
 }
 
 .auth-form button:hover {
