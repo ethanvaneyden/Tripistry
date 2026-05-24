@@ -42,7 +42,7 @@
                 with the community!
               </p>
             </div>
-            <button class="review-btn">
+            <button class="review-btn" id="write-review">
               Write Review
               <i class="bi bi-pencil-square"></i>
             </button>
@@ -79,15 +79,59 @@
               <span class="badge-package">Kruger Safari</span>
 
               <div class="review-actions">
-                <a href="#" class="review-action"><i class="bi bi-pencil"></i> Edit</a>
-                <a href="#" class="review-action"><i class="bi bi-trash"></i> Delete</a>
+                <a href="#" class="review-action"
+                  ><i class="bi bi-pencil"></i> Edit</a
+                >
+                <a href="#" class="review-action"
+                  ><i class="bi bi-trash"></i> Delete</a
+                >
               </div>
             </div>
           </div>
         </div>
       </section>
     </main>
+
+    <dialog class="review-modal" id="review-modal">
+      <div class="modal-header">
+        <h2>Write a review</h2>
+        <button class="close-btn" id="close-btn"></button>
+      </div>
+      <hr class="modal-divider">
+      <div class="rating-section">
+        <div class="rating-header">
+          <h3>How was your "Cape Town Trip"?</h3>
+        </div>
+        <div class="stars">
+          <input type="radio" name="rating" id="star5" value="5" />
+          <label for="star5"><i class="bi bi-star"></i></label>
+
+          <input type="radio" name="rating" id="star4" value="4" />
+          <label for="star4"><i class="bi bi-star"></i></label>
+
+          <input type="radio" name="rating" id="star3" value="3" />
+          <label for="star3"><i class="bi bi-star"></i></label>
+
+          <input type="radio" name="rating" id="star2" value="2" />
+          <label for="star2"><i class="bi bi-star"></i></label>
+
+          <input type="radio" name="rating" id="star1" value="1" />
+          <label for="star1"><i class="bi bi-star"></i></label>
+        </div>
+      </div>
+      <div class="text-box">
+        <textarea
+          class="review-text"
+          id="review-text"
+          placeholder="Write review"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="review-btn" id="cancel-btn">Submit review</button>
+      </div>
+    </dialog>
   </body>
   <script src="../js/traveller-header.js"></script>
   <script src="../js/traveller-packages.js"></script>
+  <script src="../js/write-review.js"></script>
 </html>
