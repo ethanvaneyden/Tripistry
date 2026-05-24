@@ -173,7 +173,7 @@ function renderRestaurants(restaurants) {
 }
 
 function renderReviews(reviews, avgRating, reviewCount) {
-    const card = document.getElementById('reviews-card');
+    const card = document.getElementById('review-card');
 
     if (!reviews || reviews.length === 0) {
         card.innerHTML = `
@@ -291,6 +291,7 @@ async function init() {
 
     } catch (err) {
         showPageError('Could not connect to the server.');
+        console.error(err.message);
     }
 }
 
