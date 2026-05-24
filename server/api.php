@@ -149,7 +149,7 @@ if ($method === 'GET' && strpos($uri, '/api/travellers/profile') !== false) {
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
 
-    if (!$row) respond(404, ["success" => false, "error" => "Traveller not found"]);
+    if (!$row) respond(404, ["success" => false, "error" => "Traveller does not exist"]);
     respond(200, ["success" => true, "data" => $row]);
 }
 
