@@ -450,7 +450,7 @@ if ($method === 'POST' && strpos($uri, '/api/bookings/create') !== false) {
     $data = getBody();
     requireFields($data, ['travellerID','packageID','numberOfPeople','totalPrice']);
 
-    // Check capacity
+    
     $cap = $pdo->prepare("
         SELECT p.MaxParticipants, COALESCE(SUM(b.NumberOfPeople), 0) AS booked
         FROM Package p
