@@ -1,97 +1,170 @@
-const packagesection = document.getElementById('package-section');
+const API_BASE      = 'http://localhost/Tripistry/server/api.php';
+const packageSection = document.getElementById('package-section');
 
-const packages = [];
+// -----------------------------------------------------------------------
+// Auth guard — must be logged in as an agency
+// -----------------------------------------------------------------------
+const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+if (!user || user.role !== 'agency') {
+    window.location.href = '../index.html';
+}
 
+// -----------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-ZA', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+}
 
-packages.push({
-  PackageID: 17,
-  AgencyName: "Wanderlust SA Ltd",
-  Title: "Winelands Wellness & Spa Retreat",
-  Description: "Indulge in a 5-day luxury escape in Stellenbosch featuring private vineyard tours and premium spa treatments.",
-  StartDate: "2026-08-10",
-  EndDate: "2026-08-15",
-  MaxParticipants: 6,
-  TotalPrice: 18900.00,
-  ThumbnailURL: "https://cdn.audleytravel.com/-/-/79/202212062016038075235029202078092005131161128165.jpg",
-  Location: 'Cape Town, South Africa'
-});
+function formatPrice(price) {
+    return new Intl.NumberFormat('en-ZA', {
+        style: 'currency', currency: 'ZAR', maximumFractionDigits: 0
+    }).format(price);
+}
 
-packages.push({
-  PackageID: 18,
-  AgencyName: "Wanderlust SA Ltd",
-  Title: "Gauteng Heritage: Cradle & Soweto",
-  Description: "Explore the origins of humanity at Maropeng followed by a cultural immersion in the heart of Soweto.",
-  StartDate: "2026-09-05",
-  EndDate: "2026-09-08",
-  MaxParticipants: 20,
-  TotalPrice: 6200.00,
-  ThumbnailURL: "https://picsum.photos/id/1074/400/300",
-  Location: 'Cradle of Humankind, South Africa'
-});
+function renderStars(rating) {
+    let s = '';
+    for (let i = 1; i <= 5; i++) s += i <= Math.round(rating) ? '★' : '☆';
+    return s;
+}
 
-packages.push({
-  PackageID: 19,
-  AgencyName: "Wanderlust SA Ltd",
-  Title: "Drakensberg: The Royal Natal Hike",
-  Description: "A 4-night guided expedition to the Tugela Falls and the Amphitheatre for adventure-seeking travellers.",
-  StartDate: "2026-10-12",
-  EndDate: "2026-10-16",
-  MaxParticipants: 10,
-  TotalPrice: 11500.00,
-  ThumbnailURL: "https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?w=400&q=60",
-  Location: 'Drankensberg, South Africa'
-});
+// -----------------------------------------------------------------------
+// Update stat cards
+// -----------------------------------------------------------------------
+function updateStats(totalPackages, avgRating) {
+    const statCards = document.querySelectorAll('.stat-card p');
+    if (statCards[0]) statCards[0].textContent = totalPackages;
+    if (statCards[1]) statCards[1].textContent = avgRating > 0 ? `${avgRating}/5` : 'N/A';
+}
 
-function createCard(imageURL, title, location, description, dateString, price, agencyName) {
-  const card = document.createElement('div');
-  card.classList.add('package-card');
-  card.innerHTML = `
-          <img
+// -----------------------------------------------------------------------
+// Delete a package
+// -----------------------------------------------------------------------
+async function deletePackage(packageId, cardEl) {
+    if (!confirm('Are you sure you want to delete this package? This cannot be undone.')) return;
+
+    try {
+        const res  = await fetch(`${API_BASE}/api/agency/packages/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agency_id: user.id, package_id: packageId }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.error || 'Failed to delete package.');
+            return;
+        }
+
+        cardEl.style.transition = 'opacity 0.3s';
+        cardEl.style.opacity    = '0';
+        setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
+
+    } catch (err) {
+        alert('Could not connect to the server.');
+    }
+}
+
+// -----------------------------------------------------------------------
+// Build a package card
+// -----------------------------------------------------------------------
+function createCard(pkg) {
+    const card      = document.createElement('div');
+    const nights    = pkg.Nights || 0;
+    const location  = [pkg.City, pkg.Country].filter(Boolean).join(', ') || 'Unknown destination';
+    const thumbnail = pkg.ThumbnailURL
+        || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600';
+
+    card.classList.add('package-card');
+    card.innerHTML = `
+        <img
             class="package-image"
-            src="${imageURL}"
-            alt="Package picture"
-
-          />
-          <div class="card-content">
-            <h2 class="card-title">${title}</h2>
+            src="${thumbnail}"
+            alt="${pkg.Title}"
+            onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600'"
+        />
+        <div class="card-content">
+            <h2 class="card-title">${pkg.Title}</h2>
             <h3 class="card-destination">${location}</h3>
-            <p class="card-description">
-              ${description}
-            </p>
-
+            <p class="card-description">${pkg.Description || ''}</p>
             <ul class="card-meta">
-              <li class="card-date">${dateString} <small>(7 nights)</small></li>
-              <li class="card-price">R${price} <small>/ person</small></li>
-              <li class="card-agency">Offered by ${agencyName}</li>
-              <li class="rating">
-                <span class="stars">★★★★☆</span>
-                <span>4.7</span>
-              </li>
+                <li class="card-date">
+                    ${formatDate(pkg.StartDate)}
+                    <small>(${nights} night${nights !== 1 ? 's' : ''})</small>
+                </li>
+                <li class="card-price">${formatPrice(pkg.TotalPrice)} <small>/ person</small></li>
+                <li class="rating">
+                    <span class="stars">${renderStars(pkg.AvgRating)}</span>
+                    <span>${parseFloat(pkg.AvgRating) > 0 ? parseFloat(pkg.AvgRating).toFixed(1) : 'No reviews'}</span>
+                </li>
+                <li><i class="bi bi-people"></i> ${pkg.BookingCount} booking${pkg.BookingCount != 1 ? 's' : ''}</li>
             </ul>
             <div class="side-by-side-btn">
-            <a href="packagedetails.html" class="btn-outline">
-              Edit<i class="bi bi-pencil-square"></i>
-            </a>
-            <a href="packagedetails.html" class="btn-outline">
-              Delete<i class="bi bi-trash3"></i>
-            </a>
+                <a href="createpackage.html?edit=${pkg.PackageID}" class="btn-outline">
+                    Edit <i class="bi bi-pencil-square"></i>
+                </a>
+                <button class="btn-outline btn-delete" data-id="${pkg.PackageID}">
+                    Delete <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        </div>`;
+
+    card.querySelector('.btn-delete').addEventListener('click', () => {
+        deletePackage(pkg.PackageID, card);
+    });
+
+    return card;
+}
+
+// -----------------------------------------------------------------------
+// Fetch and render
+// -----------------------------------------------------------------------
+async function fetchPackages() {
+    packageSection.innerHTML = `
+        <div class="no-results">
+            <i class="bi bi-arrow-repeat" style="font-size:2rem;color:var(--amber)"></i>
+            <p>Loading your packages…</p>
+        </div>`;
+
+    try {
+        const res  = await fetch(`${API_BASE}/api/agency/packages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agency_id: user.id }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            packageSection.innerHTML = `<div class="no-results"><p>${data.error}</p></div>`;
+            return;
+        }
+
+        updateStats(data.total_packages, data.avg_rating);
+
+        packageSection.innerHTML = '';
+
+        if (!data.packages || data.packages.length === 0) {
+            packageSection.innerHTML = `
+                <div class="no-results">
+                    <i class="bi bi-inbox" style="font-size:2rem;color:var(--amber)"></i>
+                    <p>You haven't created any packages yet.
+                       <a href="createpackage.html">Create one now</a>
+                    </p>
+                </div>`;
+            return;
+        }
+
+        data.packages.forEach(pkg => packageSection.appendChild(createCard(pkg)));
+
+    } catch (err) {
+        packageSection.innerHTML = `
+            <div class="no-results">
+                <p>Could not connect to the server. Make sure XAMPP is running.</p>
             </div>`;
-  return card;
+    }
 }
 
-async function renderPackages(packages) {
-  packages.forEach(package => {
-    const card = createCard(package.ThumbnailURL,
-      package.Title,
-      package.Location,
-      package.Description,
-      '15-22 June',
-      package.TotalPrice,
-      package.AgencyName)
-    packagesection.appendChild(card);
-
-  });
-}
-
-renderPackages(packages);
-
+fetchPackages();

@@ -1,50 +1,66 @@
-const submit = document.getElementById('submit');
+const API_BASE = 'http://localhost/Tripistry/server/api.php';
+
+const submit        = document.getElementById('submit');
 const passwordField = document.getElementById('password');
-const emailField = document.getElementById('email');
-const authFooter = document.getElementById('auth-footer')
+const emailField    = document.getElementById('email');
+
+// Show a success message if arriving after registration
+const params = new URLSearchParams(window.location.search);
+if (params.get('registered') === '1') {
+    const error = document.getElementById('error-container');
+    if (error) {
+        error.classList.add('error-visible');
+        error.style.background = 'rgba(0,180,100,0.15)';
+        error.style.borderColor = 'rgba(0,200,100,0.4)';
+        error.innerHTML = `
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Account created! You can now log in.</span>`;
+    }
+}
 
 async function login() {
-    const email = emailField.value;
+    const email    = emailField.value.trim();
     const password = passwordField.value;
 
-    const body = {
-        email: email,
-        password: password
-    }
-    const settings = {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        }
-    };
     try {
-        const fetchResponse = await fetch('http://localhost/Tripistry/server/api.php/api/login', settings);
-        const data = await fetchResponse.json();
-        return data;
+        const res  = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+        return await res.json();
     } catch (e) {
-        return e;
+        return { error: 'Could not connect to the server.' };
     }
 }
 
 submit.addEventListener('click', async (e) => {
     e.preventDefault();
+
+    submit.disabled    = true;
+    submit.textContent = 'Logging in…';
+
     const response = await login();
-    if (response.message !== "Login successful!") {
+
+    submit.disabled    = false;
+    submit.textContent = 'Login';
+
+    if (response.message !== 'Login successful!') {
         const error = document.getElementById('error-container');
-        error.classList.add('error-visible')
+        error.classList.add('error-visible');
+        error.style.background   = '';
+        error.style.borderColor  = '';
         error.innerHTML = `
             <i class="bi bi-exclamation-circle-fill"></i>
-            <span id="error-text">Incorrect email or password</span>`;
+            <span id="error-text">${response.error || 'Incorrect email or password'}</span>`;
         return;
     }
 
-    if (response.user.role === 'agency') {
-        window.location.href = "../client/agency/agencydashboard.html";
-    }
-    else {
-        window.location.href = "../client/traveller/browsepackages.html";
-    }
+    sessionStorage.setItem('user', JSON.stringify(response.user));
 
-})
+    if (response.user.role === 'agency') {
+        window.location.href = 'agency/agencydashboard.html';
+    } else {
+        window.location.href = 'traveller/browsepackages.html';
+    }
+});
