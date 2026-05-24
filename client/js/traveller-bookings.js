@@ -1,4 +1,4 @@
-const API_BASE       = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = 'http://localhost/Tripistry/server/api.php';
 const packageSection = document.querySelector('.package-section');
 
 // -----------------------------------------------------------------------
@@ -27,7 +27,7 @@ function formatPrice(price) {
 
 function statusBadge(status) {
     const colours = {
-        Pending:   'background:rgba(255,180,0,0.2);   color:#ffb400;  border:1px solid rgba(255,180,0,0.4)',
+        Pending: 'background:rgba(255,180,0,0.2);   color:#ffb400;  border:1px solid rgba(255,180,0,0.4)',
         Confirmed: 'background:rgba(0,200,100,0.2);   color:#00c864;  border:1px solid rgba(0,200,100,0.4)',
         Cancelled: 'background:rgba(220,50,50,0.2);   color:#e05555;  border:1px solid rgba(220,50,50,0.4)',
         Completed: 'background:rgba(100,149,237,0.2); color:#6495ed;  border:1px solid rgba(100,149,237,0.4)',
@@ -40,9 +40,9 @@ function statusBadge(status) {
 // Build a booking card
 // -----------------------------------------------------------------------
 function createCard(booking) {
-    const card      = document.createElement('div');
-    const nights    = booking.Nights || 0;
-    const location  = [booking.City, booking.Country].filter(Boolean).join(', ') || 'Unknown destination';
+    const card = document.createElement('div');
+    const nights = booking.Nights || 0;
+    const location = [booking.City, booking.Country].filter(Boolean).join(', ') || 'Unknown destination';
     const thumbnail = booking.ThumbnailURL
         || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600';
 
@@ -72,8 +72,8 @@ function createCard(booking) {
                     </small>
                 </li>
                 ${booking.NumberOfPeople > 1
-                    ? `<li><i class="bi bi-people"></i> ${booking.NumberOfPeople} people</li>`
-                    : ''}
+            ? `<li><i class="bi bi-people"></i> ${booking.NumberOfPeople} people</li>`
+            : ''}
             </ul>
             <a href="packagedetails.html?id=${booking.PackageID}" class="btn-outline">
                 View package <i class="bi bi-chevron-double-right"></i>
@@ -94,7 +94,7 @@ async function fetchBookings() {
         </div>`;
 
     try {
-        const res  = await fetch(`${API_BASE}/api/traveller/bookings`, {
+        const res = await fetch(`${API_BASE}/api/traveller/bookings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ traveller_id: user.id }),
@@ -113,8 +113,8 @@ async function fetchBookings() {
                 <div class="no-results">
                     <i class="bi bi-suitcase-lg" style="font-size:2rem;color:var(--amber)"></i>
                     <p>You haven't booked any packages yet.
-                       <a href="browsepackages.html">Browse packages</a>
                     </p>
+                    <a class="go-book" href="browsepackages.html">Browse packages</a>
                 </div>`;
             return;
         }

@@ -19,46 +19,40 @@ const publishBtn = document.getElementById('publishPackage');
 // Inject modal HTML into the page
 // -----------------------------------------------------------------------
 const modalHTML = `
-<div id="resource-modal" style="
-    display:none; position:fixed; inset:0; z-index:1000;
-    background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
-    align-items:center; justify-content:center;">
-    <div style="
-        background:#1a1a2e; border:1px solid rgba(255,255,255,0.15);
-        border-radius:12px; padding:2rem; width:90%; max-width:520px;
-        max-height:80vh; display:flex; flex-direction:column; gap:1rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-            <h2 id="modal-title" style="color:white; margin:0; font-size:1.1rem"></h2>
-            <button id="modal-close" style="
-                background:none; border:none; color:rgba(255,255,255,0.6);
-                font-size:1.4rem; cursor:pointer; line-height:1">&times;</button>
-        </div>
-
-        <input id="modal-search" type="text" placeholder="Search…" style="
-            width:100%; padding:0.6rem 0.9rem; border-radius:8px;
-            border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.07);
-            color:white; font-size:0.9rem; box-sizing:border-box"/>
-
-        <div id="modal-results" style="
-            overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:0.5rem">
-            <p style="color:rgba(255,255,255,0.4); font-size:0.85rem">
-                Type to search or leave blank to browse all.
-            </p>
-        </div>
-
-        <div id="modal-linked-title" style="color:rgba(255,255,255,0.5); font-size:0.8rem; display:none">
-            ALREADY LINKED
-        </div>
-        <div id="modal-linked" style="display:flex; flex-wrap:wrap; gap:0.4rem"></div>
+<dialog id="resource-modal" class="resource-modal">
+    <div class="modal-header">
+        <h2><i class="bi bi-link-45deg"></i> <span id="modal-title-text">Link Resource</span></h2>
+        <button class="close-btn" id="modal-close">×</button>
     </div>
-</div>`;
+    <hr class="modal-divider" />
+
+    <div class="modal-body-column">
+        <div class="search-bar">
+            <input
+                type="text"
+                id="modal-search"
+                placeholder="Search..."
+            />
+            <i class="bi bi-search"></i>
+        </div>
+
+        <div class="results-list" id="modal-results">
+            <p class="sub-line">Type to search or leave blank to browse all.</p>
+        </div>
+
+        <div id="modal-linked-title">
+            Already Linked
+        </div>
+        <div id="modal-linked"></div>
+    </div>
+</dialog>`;
 document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-const modal        = document.getElementById('resource-modal');
-const modalTitle   = document.getElementById('modal-title');
-const modalSearch  = document.getElementById('modal-search');
+const modal = document.getElementById('resource-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalSearch = document.getElementById('modal-search');
 const modalResults = document.getElementById('modal-results');
-const modalLinked  = document.getElementById('modal-linked');
+const modalLinked = document.getElementById('modal-linked');
 const modalLinkedTitle = document.getElementById('modal-linked-title');
 
 document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -78,18 +72,18 @@ let searchTimer = null;
 function openModal(type) {
     if (!currentPackageId) {
         showError('Please publish the package first, then add resources.');
-        return;
+        //return;
     }
     activeType = type;
     const labels = {
         flight: 'Add Flight', accommodation: 'Add Accommodation',
         destination: 'Add Destination', restaurant: 'Add Restaurant'
     };
-    modalTitle.textContent = labels[type];
-    modalSearch.value      = '';
+   // modalTitle.textContent = labels[type];
+    modalSearch.value = '';
     modalResults.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">Type to search or leave blank to browse all.</p>';
     renderLinkedChips();
-    modal.style.display = 'flex';
+    modal.showModal();
     setTimeout(() => modalSearch.focus(), 50);
 }
 
@@ -134,7 +128,7 @@ async function searchResources(query) {
     modalResults.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">Searching…</p>';
 
     try {
-        const res  = await fetch(`${API_BASE}/api/resources/search`, {
+        const res = await fetch(`${API_BASE}/api/resources/search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: activeType, query }),
@@ -207,13 +201,13 @@ function buildSublabel(item) {
 // -----------------------------------------------------------------------
 async function linkResource(item) {
     try {
-        const res  = await fetch(`${API_BASE}/api/resources/link`, {
+        const res = await fetch(`${API_BASE}/api/resources/link`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                agency_id:   user.id,
-                package_id:  currentPackageId,
-                type:        activeType,
+                agency_id: user.id,
+                package_id: currentPackageId,
+                type: activeType,
                 resource_id: item.id,
             }),
         });
@@ -232,13 +226,13 @@ async function linkResource(item) {
 
 async function unlinkResource(resourceId) {
     try {
-        const res  = await fetch(`${API_BASE}/api/resources/unlink`, {
+        const res = await fetch(`${API_BASE}/api/resources/unlink`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                agency_id:   user.id,
-                package_id:  currentPackageId,
-                type:        activeType,
+                agency_id: user.id,
+                package_id: currentPackageId,
+                type: activeType,
                 resource_id: resourceId,
             }),
         });
@@ -263,25 +257,25 @@ function updateResourceButton(type) {
         flight: 'addFlight', accommodation: 'addAccomodation',
         destination: 'addDestination', restaurant: 'addRestuarant'
     };
-    const btn   = document.getElementById(idMap[type]);
+    const btn = document.getElementById(idMap[type]);
     const count = linked[type].length;
-    const p     = btn.querySelector('p');
+    const p = btn.querySelector('p');
     const labels = {
         flight: 'Flight', accommodation: 'Accommodation',
         destination: 'Destination', restaurant: 'Restaurant'
     };
     p.textContent = count > 0 ? `${labels[type]} (${count})` : `Add ${labels[type]}`;
     btn.style.borderColor = count > 0 ? 'rgba(255,180,0,0.5)' : '';
-    btn.style.color       = count > 0 ? '#ffb400' : '';
+    btn.style.color = count > 0 ? '#ffb400' : '';
 }
 
 // -----------------------------------------------------------------------
 // Wire up the four resource buttons
 // -----------------------------------------------------------------------
-document.getElementById('addFlight').addEventListener('click',      () => openModal('flight'));
+document.getElementById('addFlight').addEventListener('click', () => openModal('flight'));
 document.getElementById('addDestination').addEventListener('click', () => openModal('destination'));
-document.getElementById('addAccomodation').addEventListener('click',() => openModal('accommodation'));
-document.getElementById('addRestuarant').addEventListener('click',  () => openModal('restaurant'));
+document.getElementById('addAccomodation').addEventListener('click', () => openModal('accommodation'));
+document.getElementById('addRestuarant').addEventListener('click', () => openModal('restaurant'));
 
 // -----------------------------------------------------------------------
 // Error / success display
@@ -293,9 +287,9 @@ function showError(message, success = false) {
         el.id = 'form-error';
         publishBtn.parentNode.insertBefore(el, publishBtn);
     }
-    el.className     = 'error-container error-visible';
-    el.style.background  = success ? 'rgba(0,180,100,0.15)' : '';
-    el.style.borderColor = success ? 'rgba(0,200,100,0.4)'  : '';
+    el.className = 'error-container error-visible';
+    el.style.background = success ? 'rgba(0,180,100,0.15)' : '';
+    el.style.borderColor = success ? 'rgba(0,200,100,0.4)' : '';
     el.innerHTML = `<i class="bi bi-${success ? 'check-circle' : 'exclamation-circle'}-fill"></i> <span>${message}</span>`;
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -304,36 +298,36 @@ function showError(message, success = false) {
 // Publish
 // -----------------------------------------------------------------------
 publishBtn.addEventListener('click', async () => {
-    const title           = document.getElementById('titleInput').value.trim();
-    const description     = document.getElementById('descriptionInput').value.trim();
-    const startDate       = document.getElementById('startDateInput').value;
-    const endDate         = document.getElementById('endDateInput').value;
+    const title = document.getElementById('titleInput').value.trim();
+    const description = document.getElementById('descriptionInput').value.trim();
+    const startDate = document.getElementById('startDateInput').value;
+    const endDate = document.getElementById('endDateInput').value;
     const maxParticipants = document.getElementById('maxParticipantsInput').value;
-    const totalPrice      = document.getElementById('priceInput').value;
+    const totalPrice = document.getElementById('priceInput').value;
 
-    if (!title)                       { showError('Package title is required.');               return; }
-    if (!description)                 { showError('Package description is required.');         return; }
-    if (!startDate)                   { showError('Start date is required.');                  return; }
-    if (!endDate)                     { showError('End date is required.');                    return; }
-    if (endDate <= startDate)         { showError('End date must be after start date.');       return; }
+    if (!title) { showError('Package title is required.'); return; }
+    if (!description) { showError('Package description is required.'); return; }
+    if (!startDate) { showError('Start date is required.'); return; }
+    if (!endDate) { showError('End date is required.'); return; }
+    if (endDate <= startDate) { showError('End date must be after start date.'); return; }
     if (!maxParticipants || maxParticipants < 1) { showError('Max participants must be at least 1.'); return; }
-    if (!totalPrice || totalPrice <= 0)          { showError('Total price must be greater than 0.');  return; }
+    if (!totalPrice || totalPrice <= 0) { showError('Total price must be greater than 0.'); return; }
 
-    publishBtn.disabled    = true;
+    publishBtn.disabled = true;
     publishBtn.textContent = 'Publishing…';
 
     try {
-        const res  = await fetch(`${API_BASE}/api/agency/packages/create`, {
+        const res = await fetch(`${API_BASE}/api/agency/packages/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                agency_id:        user.id,
+                agency_id: user.id,
                 title,
                 description,
-                start_date:       startDate,
-                end_date:         endDate,
+                start_date: startDate,
+                end_date: endDate,
                 max_participants: parseInt(maxParticipants),
-                total_price:      parseFloat(totalPrice),
+                total_price: parseFloat(totalPrice),
             }),
         });
         const data = await res.json();
