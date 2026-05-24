@@ -108,6 +108,14 @@ if ($method === 'POST' && strpos($uri, '/api/login') !== false) {
     $data = getBody();
     requireFields($data, ['email','password']);
 
+     if (!preg_match('/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/', $data['email'])) {
+        respond(400, ["success" => false, "error" => "Invalid email format"]);
+    }
+
+    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) {
+        respond(400, ["success" => false, "error" => "Invalid password format"]);
+    }
+
     $email    = $data['email'];
     $password = $data['password'];
 
