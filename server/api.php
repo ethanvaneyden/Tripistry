@@ -162,7 +162,7 @@ if ($method === 'GET' && strpos($uri, '/api/agencies/profile') !== false) {
     $stmt->execute([':id' => $id]);
     $row = $stmt->fetch();
 
-    if (!$row) respond(404, ["success" => false, "error" => "Agency not found"]);
+    if (!$row) respond(404, ["success" => false, "error" => "Agency does not exist"]);
     respond(200, ["success" => true, "data" => $row]);
 }
 
