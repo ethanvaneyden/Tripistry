@@ -460,7 +460,7 @@ if ($method === 'POST' && strpos($uri, '/api/bookings/create') !== false) {
     ");
     $cap->execute([':id' => $data['packageID']]);
     $capRow = $cap->fetch();
-    if (!$capRow) respond(404, ["success" => false, "error" => "Package not found"]);
+    if (!$capRow) respond(404, ["success" => false, "error" => "Package does not exist"]);
     if (($capRow['booked'] + $data['numberOfPeople']) > $capRow['MaxParticipants']) {
         respond(409, ["success" => false, "error" => "Not enough spots available"]);
     }
