@@ -45,3 +45,6 @@
     color: red;
 }
 
+.no-results a{
+    color: var(--amber);
+}

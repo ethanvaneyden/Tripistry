@@ -273,6 +273,7 @@
     border-radius: 12px;
     font-size: 0.95rem;
     cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     transition: all 0.2s ease;
 }
@@ -294,6 +295,7 @@
     align-items: center;
     gap: 0.75rem;
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
 }
 

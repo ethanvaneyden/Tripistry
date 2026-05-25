@@ -266,11 +266,7 @@
 .btn-confirm-yes,
 .btn-confirm-no {
     width: 100%;
-    padding: 0.8rem 1.2rem;
-    border-radius: 8px;
     border: none;
-    font-size: 0.95rem;
-    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -323,16 +319,17 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
     color: #fff;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .glass-modal::backdrop {
     background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+
 }
 
 .close-x-btn {

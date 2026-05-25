@@ -191,17 +191,61 @@
 }
 
 /* Package detail helpers moved here */
-.hr-muted { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0.5rem 0; }
-.muted { color: rgba(255,255,255,0.6); }
-.muted-sm { color: rgba(255,255,255,0.45); }
-.small { font-size: 0.8rem; }
-.small-muted { color: rgba(255,255,255,0.4); font-size: 0.75rem; }
-.big-rating { font-size: 2rem; font-weight: 700; color: var(--amber); }
-.stars-small { font-size: 1.1rem; }
-.rating-summary { margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem; }
-.page-error { text-align: center; padding: 6rem 2rem; color: white; }
-.error-icon { font-size: 3rem; color: var(--danger); }
-.btn-inline { display: inline-flex; margin-top: 1rem; }
+.hr-muted {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
+}
+
+.muted {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.muted-sm {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.small {
+    font-size: 0.8rem;
+}
+
+.small-muted {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+}
+
+.big-rating {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--amber);
+}
+
+.stars-small {
+    font-size: 1.1rem;
+}
+
+.rating-summary {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.page-error {
+    text-align: center;
+    padding: 6rem 2rem;
+    color: white;
+}
+
+.error-icon {
+    font-size: 3rem;
+    color: var(--danger);
+}
+
+.btn-inline {
+    display: inline-flex;
+    margin-top: 1rem;
+}
 
 .price-box {
     margin-bottom: 1.5rem;
@@ -273,16 +317,16 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
     color: #fff;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .glass-modal::backdrop {
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
 }
 
 /* --- Layout Elements --- */
@@ -334,8 +378,8 @@
     color: #fff;
     text-align: center;
     font-size: 1rem;
-    appearance: textfield;
     -webkit-appearance: none;
+    appearance: textfield;
     outline: none;
 }
 
@@ -423,8 +467,6 @@
     color: white;
 }
 
-.
-
 @media (max-width: 992px) {
     .view-container {
         grid-template-columns: 1fr;
@@ -446,6 +488,7 @@
         gap: 1.5rem;
     }
 }
+
 /* ---- Booking feedback ---- */
 .booking-feedback {
     margin: 0 0 1rem;
@@ -454,11 +497,13 @@
     font-size: 0.9rem;
     font-weight: 500;
 }
+
 .booking-feedback.success {
     background: rgba(52, 199, 89, 0.15);
     border: 1px solid rgba(52, 199, 89, 0.4);
     color: whitesmoke;
 }
+
 .booking-feedback.error {
     background: rgba(224, 85, 85, 0.15);
     border: 1px solid rgba(224, 85, 85, 0.4);

@@ -243,6 +243,13 @@ img {
   animation: slideIn 0.3s ease-out;
 }
 
+.disabled {
+    filter: grayscale(100%) brightness(0.8);
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .error-visible {
   display: block !important;
 }

@@ -1,4 +1,4 @@
-const API_BASE      = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = 'http://localhost/Tripistry/server/api.php';
 const packageSection = document.getElementById('package-section');
 
 // -----------------------------------------------------------------------
@@ -44,10 +44,11 @@ function updateStats(totalPackages, avgRating) {
 // Delete a package
 // -----------------------------------------------------------------------
 async function deletePackage(packageId, cardEl) {
-    if (!confirm('Are you sure you want to delete this package? This cannot be undone.')) return;
+    const confirmed = await showCustomConfirm();
+    if (!confirmed) return;
 
     try {
-        const res  = await fetch(`${API_BASE}/api/agency/packages/delete`, {
+        const res = await fetch(`${API_BASE}/api/agency/packages/delete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agency_id: user.id, package_id: packageId }),
@@ -60,7 +61,7 @@ async function deletePackage(packageId, cardEl) {
         }
 
         cardEl.classList.add('fade-out');
-            setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
+        setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
 
     } catch (err) {
         alert('Could not connect to the server.');
@@ -71,9 +72,9 @@ async function deletePackage(packageId, cardEl) {
 // Build a package card
 // -----------------------------------------------------------------------
 function createCard(pkg) {
-    const card      = document.createElement('div');
-    const nights    = pkg.Nights || 0;
-    const location  = [pkg.City, pkg.Country].filter(Boolean).join(', ') || 'Unknown destination';
+    const card = document.createElement('div');
+    const nights = pkg.Nights || 0;
+    const location = [pkg.City, pkg.Country].filter(Boolean).join(', ') || 'Unknown destination';
     const thumbnail = pkg.ThumbnailURL
         || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600';
 
@@ -129,7 +130,7 @@ async function fetchPackages() {
         </div>`;
 
     try {
-        const res  = await fetch(`${API_BASE}/api/agency/packages`, {
+        const res = await fetch(`${API_BASE}/api/agency/packages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agency_id: user.id }),
@@ -150,8 +151,8 @@ async function fetchPackages() {
                 <div class="no-results">
                     <i class="bi bi-inbox icon-2rem icon-amber"></i>
                     <p>You haven't created any packages yet.
-                       <a href="createpackage.html">Create one now</a>
                     </p>
+                    <a href="createpackage.html">Create one now</a>
                 </div>`;
             return;
         }
@@ -164,6 +165,30 @@ async function fetchPackages() {
                 <p>Could not connect to the server. Make sure XAMPP is running.</p>
             </div>`;
     }
+}
+
+function showCustomConfirm() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmationModal');
+        const confirmBtn = document.getElementById('confirmYes');
+        const cancelBtn = document.getElementById('confirmNo');
+        const xButton = document.getElementById('confirmClose')
+
+        modal.showModal()
+
+        function handleChoice(choice) {
+            modal.close();
+            confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+            cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            xButton.replaceWith(xButton.cloneNode(true));
+            resolve(choice);
+        }
+
+        document.getElementById('confirmYes').addEventListener('click', () => handleChoice(true));
+        document.getElementById('confirmNo').addEventListener('click', () => handleChoice(false));
+        document.getElementById('confirmClose').addEventListener('click', () => handleChoice(false));
+        
+    });
 }
 
 fetchPackages();
