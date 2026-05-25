@@ -36,10 +36,14 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 } catch (PDOException $e) {
+    write_log('ERROR', 'DB_CONNECTION_FAILED', ['msg' => $e->getMessage()]);
     http_response_code(500);
     echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
     exit();
 }
+define('LOGIN_MAX_ATTEMPTS',    5);
+define('LOGIN_WINDOW_SECONDS',  600);   // 10-minute sliding window
+define('LOGIN_LOCKOUT_SECONDS', 900);
 
 $method = $_SERVER['REQUEST_METHOD'];
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
