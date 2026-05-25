@@ -3,16 +3,12 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
+require_once 'config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-
-$db_host = "127.0.0.1";
-$db_user = "root";
-$db_pass = "Silver4monsters";
-$db_name = "tripistry";
+$db_host = DB_HOST;
+$db_user = DB_USER;
+$db_pass = DB_PASS;
+$db_name = DB_NAME;
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 
@@ -21,54 +17,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(["success" => false, "error" => "Database connection failed: " . $e->getMessage()]);
+    echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
     exit();
-}
-
-
-function getBody(): array {
-    $raw = file_get_contents("php://input");
-    return json_decode($raw, true) ?? [];
-}
-
-function respond(int $code, array $payload): void {
-    http_response_code($code);
-    echo json_encode($payload);
-    exit();
-}
-
-function requireFields(array $data, array $fields): void {
-    foreach ($fields as $f) {
-        if (empty($data[$f])) {
-            respond(400, ["success" => false, "error" => "Missing required field: $f"]);
-        }
-    }
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+if ($method !== 'POST') {
+    http_response_code(405);
+    echo json_encode(["error" => "Method Not Allowed. Use POST."]);
+    exit();
+}
 
-if ($method === 'POST' && strpos($uri, '/api/register/traveller') !== false) {
-    $data = getBody();
-    requireFields($data, ['name','surname','email','password','phone','nationality','dateofbirth']);
-     if (!preg_match('/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/', $data['email'])) {
-        respond(400, ["success" => false, "error" => "Invalid email format"]);
+$raw_input = file_get_contents("php://input");
+$data = json_decode($raw_input, true);
+
+if (strpos($request_uri, '/api/register/traveller') !== false) {
+
+    if (
+        empty($data['name']) ||
+        empty($data['surname']) ||
+        empty($data['email']) ||
+        empty($data['password']) ||
+        empty($data['phone']) ||
+        empty($data['nationality']) ||
+        empty($data['dateofbirth'])
+    ) {
+        http_response_code(400);
+        echo json_encode(["error" => "All traveller fields are required."]);
+        exit();
     }
 
-    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) {
-        respond(400, ["success" => false, "error" => "Invalid password format"]);
-    }
     try {
         $stmt = $pdo->prepare("
-            INSERT INTO Traveller (FirstName, Surname, Email, Password, Phone, Nationality, DateOfBirth, JoinDate)
-            VALUES (:name, :surname, :email, :password, :phone, :nationality, :dob, CURDATE())
+            INSERT INTO traveller 
+            (FirstName, Surname, Email, Password, Phone, Nationality, DateOfBirth, JoinDate) 
+            VALUES 
+            (:name, :surname, :email, :password, :phone, :nationality, :dob, CURDATE())
         ");
+
         $stmt->execute([
             ':name'        => $data['name'],
             ':surname'     => $data['surname'],
@@ -78,30 +71,49 @@ if ($method === 'POST' && strpos($uri, '/api/register/traveller') !== false) {
             ':nationality' => $data['nationality'],
             ':dob'         => $data['dateofbirth']
         ]);
-        respond(201, ["success" => true, "travellerID" => (int)$pdo->lastInsertId(), "message" => "Traveller registered successfully"]);
+
+        http_response_code(201);
+        echo json_encode(["message" => "Traveller registered successfully!"]);
+
     } catch (PDOException $e) {
-        $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "Email already in use" : "Registration failed: " . $e->getMessage();
-        respond($code, ["success" => false, "error" => $msg]);
+
+        http_response_code(400);
+
+        if ($e->getCode() == 23000) {
+            echo json_encode(["error" => "Email is already registered as a traveller."]);
+        } else {
+            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+        }
     }
+
+    exit();
 }
 
+if (strpos($request_uri, '/api/register/agency') !== false) {
 
-if ($method === 'POST' && strpos($uri, '/api/register/agency') !== false) {
-    $data = getBody();
-    requireFields($data, ['name','email','password','phone','street','city','country']);
-     if (!preg_match('/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/', $data['email'])) {
-        respond(400, ["success" => false, "error" => "Invalid email format"]);
+    if (
+        empty($data['name']) ||
+        empty($data['email']) ||
+        empty($data['password']) ||
+        empty($data['phone']) ||
+        empty($data['street']) ||
+        empty($data['city']) ||
+        empty($data['country'])
+    ) {
+        http_response_code(400);
+        echo json_encode(["error" => "All agency fields are required."]);
+        exit();
     }
 
-    if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $data['password'])) {
-        respond(400, ["success" => false, "error" => "Invalid password format"]);
-    }
     try {
+
         $stmt = $pdo->prepare("
-            INSERT INTO Agency (Name, Email, Password, Phone, JoinDate, Street, City, Country)
-            VALUES (:name, :email, :password, :phone, CURDATE(), :street, :city, :country)
+            INSERT INTO agency 
+            (Name, Email, Password, Phone, JoinDate, Street, City, Country) 
+            VALUES 
+            (:name, :email, :password, :phone, CURDATE(), :street, :city, :country)
         ");
+
         $stmt->execute([
             ':name'     => $data['name'],
             ':email'    => $data['email'],
@@ -111,585 +123,858 @@ if ($method === 'POST' && strpos($uri, '/api/register/agency') !== false) {
             ':city'     => $data['city'],
             ':country'  => $data['country']
         ]);
-        respond(201, ["success" => true, "agencyID" => (int)$pdo->lastInsertId(), "message" => "Agency registered successfully"]);
+
+        http_response_code(201);
+        echo json_encode(["message" => "Agency registered successfully!"]);
+
     } catch (PDOException $e) {
-        $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "Email already in use" : "Registration failed: " . $e->getMessage();
-        respond($code, ["success" => false, "error" => $msg]);
+
+        http_response_code(400);
+
+        if ($e->getCode() == 23000) {
+            echo json_encode(["error" => "Email is already registered as an agency."]);
+        } else {
+            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+        }
     }
+
+    exit();
 }
 
+if (strpos($request_uri, '/api/login') !== false) {
 
-if ($method === 'POST' && strpos($uri, '/api/login') !== false) {
-    $data = getBody();
-    requireFields($data, ['email','password']);
+    if (empty($data['email']) || empty($data['password'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Email and password are required."]);
+        exit();
+    }
 
-    
-
-    $email    = $data['email'];
+    $email = $data['email'];
     $password = $data['password'];
 
-   
-    $stmt = $pdo->prepare("SELECT TravellerID, FirstName, Surname, Email, Password FROM Traveller WHERE Email = :email");
+    $stmt = $pdo->prepare("
+        SELECT TravellerID, FirstName as Name, Email, Password 
+        FROM traveller 
+        WHERE Email = :email
+    ");
+
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['Password'])) {
-        respond(200, [
-            "success" => true,
-            "role"    => "traveller",
-            "user"    => ["id" => $user['TravellerID'], "firstName" => $user['FirstName'], "surname" => $user['Surname'], "email" => $user['Email']]
+
+        http_response_code(200);
+
+        echo json_encode([
+            "message" => "Login successful!",
+            "user" => [
+                "id"   => (int)$user['TravellerID'],
+                "name" => $user['Name'],
+                "email" => $user['Email'],
+                "role" => "traveller"
+            ]
         ]);
+
+        exit();
     }
 
-    
-    $stmt = $pdo->prepare("SELECT AgencyID, Name, Email, Password FROM Agency WHERE Email = :email");
+    $stmt = $pdo->prepare("
+        SELECT AgencyID, Name, Email, Password 
+        FROM agency 
+        WHERE Email = :email
+    ");
+
     $stmt->execute([':email' => $email]);
     $agency = $stmt->fetch();
 
     if ($agency && password_verify($password, $agency['Password'])) {
-        respond(200, [
-            "success" => true,
-            "role"    => "agency",
-            "user"    => ["id" => $agency['AgencyID'], "name" => $agency['Name'], "email" => $agency['Email']]
+
+        http_response_code(200);
+
+        echo json_encode([
+            "message" => "Login successful!",
+            "user" => [
+                "id"    => (int)$agency['AgencyID'],
+                "name"  => $agency['Name'],
+                "email" => $agency['Email'],
+                "role"  => "agency"
+            ]
         ]);
+
+        exit();
     }
 
-    respond(401, ["success" => false, "error" => "Invalid email or password"]);
+    http_response_code(401);
+    echo json_encode(["error" => "Invalid email or password."]);
+    exit();
 }
 
+// -----------------------------------------------------------------------
+// SEARCH RESOURCES (flights, accommodations, destinations, restaurants)
+// POST /api/resources/search
+// Body: { type: 'flight'|'accommodation'|'destination'|'restaurant', query? }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/resources/search') !== false) {
 
-if ($method === 'GET' && strpos($uri, '/api/travellers/profile') !== false) {
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-    if (!$id) respond(400, ["success" => false, "error" => "Missing traveller id"]);
+    $type  = isset($data['type'])  ? trim($data['type'])  : '';
+    $query = isset($data['query']) ? trim($data['query']) : '';
 
-    $stmt = $pdo->prepare("SELECT TravellerID, FirstName, Surname, Email, Phone, Nationality, JoinDate FROM Traveller WHERE TravellerID = :id");
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch();
+    $allowed_types = ['flight', 'accommodation', 'destination', 'restaurant'];
+    if (!in_array($type, $allowed_types)) {
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid resource type."]);
+        exit();
+    }
 
-    if (!$row) respond(404, ["success" => false, "error" => "Traveller does not exist"]);
-    respond(200, ["success" => true, "data" => $row]);
+    $like = '%' . $query . '%';
+
+    try {
+        switch ($type) {
+            case 'flight':
+                $stmt = $pdo->prepare("
+                    SELECT
+                        f.FlightID AS id,
+                        f.Airline,
+                        f.FlightNumber,
+                        f.DepartureDateTime,
+                        f.ArrivalDateTime,
+                        f.BaseCost,
+                        o.Code AS OriginCode,
+                        o.City AS OriginCity,
+                        d.Code AS DestCode,
+                        d.City AS DestCity
+                    FROM flight f
+                    JOIN airport o ON f.OriginAirportID      = o.AirportID
+                    JOIN airport d ON f.DestinationAirportID = d.AirportID
+                    WHERE f.Airline LIKE :q1 OR f.FlightNumber LIKE :q2
+                       OR o.Code LIKE :q3    OR d.Code LIKE :q4
+                    LIMIT 20
+                ");
+                $stmt->execute([':q1' => $like, ':q2' => $like, ':q3' => $like, ':q4' => $like]);
+                break;
+
+            case 'accommodation':
+                $stmt = $pdo->prepare("
+                    SELECT AccommodationID AS id, Name, Type, StarRating, AveragePricePerNight, City, Country
+                    FROM accommodation
+                    WHERE Name LIKE :q1 OR City LIKE :q2
+                    LIMIT 20
+                ");
+                $stmt->execute([':q1' => $like, ':q2' => $like]);
+                break;
+
+            case 'destination':
+                $stmt = $pdo->prepare("
+                    SELECT DestinationID AS id, Name, City, Region, Country, Description
+                    FROM destination
+                    WHERE Name LIKE :q1 OR City LIKE :q2 OR Country LIKE :q3
+                    LIMIT 20
+                ");
+                $stmt->execute([':q1' => $like, ':q2' => $like, ':q3' => $like]);
+                break;
+
+            case 'restaurant':
+                $stmt = $pdo->prepare("
+                    SELECT RestaurantID AS id, Name, Cuisine, PriceRange, City, Country
+                    FROM restaurant
+                    WHERE Name LIKE :q1 OR City LIKE :q2 OR Cuisine LIKE :q3
+                    LIMIT 20
+                ");
+                $stmt->execute([':q1' => $like, ':q2' => $like, ':q3' => $like]);
+                break;
+        }
+
+        http_response_code(200);
+        echo json_encode(["results" => $stmt->fetchAll()]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Search failed: " . $e->getMessage()]);
+    }
+
+    exit();
 }
 
+// -----------------------------------------------------------------------
+// LINK RESOURCE TO PACKAGE
+// POST /api/resources/link
+// Body: { agency_id, package_id, type, resource_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/resources/link') !== false &&
+    strpos($request_uri, '/api/resources/unlink') === false) {
 
-if ($method === 'GET' && strpos($uri, '/api/agencies/profile') !== false) {
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-    if (!$id) respond(400, ["success" => false, "error" => "Missing agency id"]);
+    foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
+        if (empty($data[$field])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Field '$field' is required."]);
+            exit();
+        }
+    }
 
-    $stmt = $pdo->prepare("SELECT AgencyID, Name, Email, Phone, Street, City, Country, JoinDate FROM Agency WHERE AgencyID = :id");
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch();
+    $agency_id   = (int)$data['agency_id'];
+    $package_id  = (int)$data['package_id'];
+    $type        = trim($data['type']);
+    $resource_id = (int)$data['resource_id'];
 
-    if (!$row) respond(404, ["success" => false, "error" => "Agency does not exist"]);
-    respond(200, ["success" => true, "data" => $row]);
+    $table_map = [
+        'flight'        => ['packageflight',       'FlightID'],
+        'accommodation' => ['packageaccommodation', 'AccommodationID'],
+        'destination'   => ['packagedestination',   'DestinationID'],
+        'restaurant'    => ['packagerestaurant',    'RestaurantID'],
+    ];
+
+    if (!isset($table_map[$type])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid resource type."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT AgencyID FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => $package_id]);
+        $pkg  = $stmt->fetch();
+
+        if (!$pkg || (int)$pkg['AgencyID'] !== $agency_id) {
+            http_response_code(403);
+            echo json_encode(["error" => "Package not found or access denied."]);
+            exit();
+        }
+
+        [$table, $col] = $table_map[$type];
+        $stmt = $pdo->prepare("INSERT IGNORE INTO `$table` (PackageID, `$col`) VALUES (:pid, :rid)");
+        $stmt->execute([':pid' => $package_id, ':rid' => $resource_id]);
+
+        http_response_code(200);
+        echo json_encode(["message" => ucfirst($type) . " linked successfully."]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to link: " . $e->getMessage()]);
+    }
+
+    exit();
 }
 
+// -----------------------------------------------------------------------
+// UNLINK RESOURCE FROM PACKAGE
+// POST /api/resources/unlink
+// Body: { agency_id, package_id, type, resource_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
-if ($method === 'GET' && strpos($uri, '/api/packages/list') !== false) {
-    $where   = ["1=1"];
-    $params  = [];
-
-    if (!empty($_GET['destination'])) {
-        $where[]  = "d.City LIKE :destination";
-        $params[':destination'] = '%' . $_GET['destination'] . '%';
-    }
-    if (!empty($_GET['minPrice'])) {
-        $where[]  = "p.TotalPrice >= :minPrice";
-        $params[':minPrice'] = (float)$_GET['minPrice'];
-    }
-    if (!empty($_GET['maxPrice'])) {
-        $where[]  = "p.TotalPrice <= :maxPrice";
-        $params[':maxPrice'] = (float)$_GET['maxPrice'];
-    }
-    if (!empty($_GET['startDate'])) {
-        $where[]  = "p.StartDate >= :startDate";
-        $params[':startDate'] = $_GET['startDate'];
-    }
-    if (!empty($_GET['duration'])) {
-        $where[]  = "DATEDIFF(p.EndDate, p.StartDate) = :duration";
-        $params[':duration'] = (int)$_GET['duration'];
+    foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
+        if (empty($data[$field])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Field '$field' is required."]);
+            exit();
+        }
     }
 
-    $allowed_sort = ['price' => 'p.TotalPrice', 'rating' => 'avgRating', 'startDate' => 'p.StartDate'];
-    $sortCol      = $allowed_sort[$_GET['sortBy'] ?? ''] ?? 'p.PackageID';
-    $sortDir      = strtoupper($_GET['sortOrder'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+    $agency_id   = (int)$data['agency_id'];
+    $package_id  = (int)$data['package_id'];
+    $type        = trim($data['type']);
+    $resource_id = (int)$data['resource_id'];
 
-    $limit  = max(1, min(50, (int)($_GET['limit']  ?? 10)));
-    $page   = max(1, (int)($_GET['page'] ?? 1));
-    $offset = ($page - 1) * $limit;
+    $table_map = [
+        'flight'        => ['packageflight',       'FlightID'],
+        'accommodation' => ['packageaccommodation', 'AccommodationID'],
+        'destination'   => ['packagedestination',   'DestinationID'],
+        'restaurant'    => ['packagerestaurant',    'RestaurantID'],
+    ];
 
-    $whereStr = implode(" AND ", $where);
+    if (!isset($table_map[$type])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Invalid resource type."]);
+        exit();
+    }
 
-    
-    $countSql = "
-        SELECT COUNT(DISTINCT p.PackageID) as total
-        FROM Package p
-        LEFT JOIN Agency a ON p.AgencyID = a.AgencyID
-        LEFT JOIN PackageDestination pd ON p.PackageID = pd.PackageID
-        LEFT JOIN Destination d ON pd.DestinationID = d.DestinationID
-        WHERE $whereStr
-    ";
-    $countStmt = $pdo->prepare($countSql);
-    $countStmt->execute($params);
-    $total = (int)$countStmt->fetchColumn();
+    try {
+        $stmt = $pdo->prepare("SELECT AgencyID FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => $package_id]);
+        $pkg  = $stmt->fetch();
+
+        if (!$pkg || (int)$pkg['AgencyID'] !== $agency_id) {
+            http_response_code(403);
+            echo json_encode(["error" => "Package not found or access denied."]);
+            exit();
+        }
+
+        [$table, $col] = $table_map[$type];
+        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE PackageID = :pid AND `$col` = :rid");
+        $stmt->execute([':pid' => $package_id, ':rid' => $resource_id]);
+
+        http_response_code(200);
+        echo json_encode(["message" => ucfirst($type) . " unlinked successfully."]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to unlink: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// GET AGENCY'S OWN PACKAGES
+// POST /api/agency/packages
+// Body: { agency_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/agency/packages/create') === false &&
+    strpos($request_uri, '/api/agency/packages/delete') === false &&
+    strpos($request_uri, '/api/agency/packages') !== false) {
+
+    if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "A valid agency_id is required."]);
+        exit();
+    }
+
+    $agency_id = (int)$data['agency_id'];
+
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                p.PackageID,
+                p.Title,
+                p.Description,
+                p.StartDate,
+                p.EndDate,
+                DATEDIFF(p.EndDate, p.StartDate) AS Nights,
+                p.MaxParticipants,
+                p.TotalPrice,
+                MIN(pi.ImageURL)                       AS ThumbnailURL,
+                MIN(d.City)                            AS City,
+                MIN(d.Country)                         AS Country,
+                ROUND(COALESCE(AVG_R.avg_rating, 0), 1) AS AvgRating,
+                COALESCE(AVG_R.review_count, 0)        AS ReviewCount,
+                COALESCE(BK.booking_count, 0)          AS BookingCount
+            FROM package p
+            LEFT JOIN packageimage pi ON p.PackageID = pi.PackageID
+            LEFT JOIN packagedestination pd ON p.PackageID = pd.PackageID
+            LEFT JOIN destination d ON pd.DestinationID = d.DestinationID
+            LEFT JOIN (
+                SELECT PackageID, AVG(Rating) AS avg_rating, COUNT(*) AS review_count
+                FROM packagereview GROUP BY PackageID
+            ) AS AVG_R ON p.PackageID = AVG_R.PackageID
+            LEFT JOIN (
+                SELECT PackageID, COUNT(*) AS booking_count
+                FROM booking GROUP BY PackageID
+            ) AS BK ON p.PackageID = BK.PackageID
+            WHERE p.AgencyID = :agency_id
+            GROUP BY
+                p.PackageID, p.Title, p.Description, p.StartDate, p.EndDate,
+                p.MaxParticipants, p.TotalPrice,
+                AVG_R.avg_rating, AVG_R.review_count, BK.booking_count
+            ORDER BY p.StartDate ASC
+        ");
+        $stmt->execute([':agency_id' => $agency_id]);
+        $packages = $stmt->fetchAll();
+
+        $total_packages = count($packages);
+        $ratings        = array_filter(array_column($packages, 'AvgRating'));
+        $avg_rating     = count($ratings) > 0 ? round(array_sum($ratings) / count($ratings), 1) : 0;
+
+        http_response_code(200);
+        echo json_encode([
+            "packages"       => $packages,
+            "total_packages" => $total_packages,
+            "avg_rating"     => $avg_rating,
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch agency packages: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// CREATE PACKAGE
+// POST /api/agency/packages/create
+// Body: { agency_id, title, description, start_date, end_date, max_participants, total_price }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/agency/packages/create') !== false) {
+
+    $required = ['agency_id', 'title', 'description', 'start_date', 'end_date', 'max_participants', 'total_price'];
+    foreach ($required as $field) {
+        if (!isset($data[$field]) || $data[$field] === '') {
+            http_response_code(400);
+            echo json_encode(["error" => "Field '$field' is required."]);
+            exit();
+        }
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO package (AgencyID, Title, Description, StartDate, EndDate, MaxParticipants, TotalPrice)
+            VALUES (:agency_id, :title, :description, :start_date, :end_date, :max_participants, :total_price)
+        ");
+        $stmt->execute([
+            ':agency_id'        => (int)$data['agency_id'],
+            ':title'            => trim($data['title']),
+            ':description'      => trim($data['description']),
+            ':start_date'       => $data['start_date'],
+            ':end_date'         => $data['end_date'],
+            ':max_participants' => (int)$data['max_participants'],
+            ':total_price'      => (float)$data['total_price'],
+        ]);
+
+        http_response_code(201);
+        echo json_encode([
+            "message"    => "Package created successfully.",
+            "package_id" => (int)$pdo->lastInsertId(),
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create package: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// DELETE PACKAGE
+// POST /api/agency/packages/delete
+// Body: { agency_id, package_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
+
+    if (empty($data['agency_id']) || empty($data['package_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "agency_id and package_id are required."]);
+        exit();
+    }
+
+    $agency_id  = (int)$data['agency_id'];
+    $package_id = (int)$data['package_id'];
+
+    try {
+        $stmt = $pdo->prepare("SELECT AgencyID FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => $package_id]);
+        $pkg = $stmt->fetch();
+
+        if (!$pkg) {
+            http_response_code(404);
+            echo json_encode(["error" => "Package not found."]);
+            exit();
+        }
+
+        if ((int)$pkg['AgencyID'] !== $agency_id) {
+            http_response_code(403);
+            echo json_encode(["error" => "You do not have permission to delete this package."]);
+            exit();
+        }
+
+        $stmt = $pdo->prepare("DELETE FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => $package_id]);
+
+        http_response_code(200);
+        echo json_encode(["message" => "Package deleted successfully."]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to delete package: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// GET TRAVELLER'S BOOKINGS
+// POST /api/traveller/bookings
+// Body: { traveller_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/traveller/bookings') !== false) {
+
+    if (empty($data['traveller_id']) || !is_numeric($data['traveller_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "A valid traveller_id is required."]);
+        exit();
+    }
+
+    $traveller_id = (int)$data['traveller_id'];
+
+    try {
+        $stmt = $pdo->prepare("
+            SELECT
+                b.BookingID,
+                b.Date           AS BookingDate,
+                b.NumberOfPeople,
+                b.Status,
+                b.TotalPrice     AS BookingPrice,
+                p.PackageID,
+                p.Title,
+                p.Description,
+                p.StartDate,
+                p.EndDate,
+                DATEDIFF(p.EndDate, p.StartDate) AS Nights,
+                a.Name           AS AgencyName,
+                MIN(pi.ImageURL) AS ThumbnailURL,
+                MIN(d.City)      AS City,
+                MIN(d.Country)   AS Country
+            FROM booking b
+            JOIN package p  ON b.PackageID  = p.PackageID
+            JOIN agency a   ON p.AgencyID   = a.AgencyID
+            LEFT JOIN packageimage pi       ON p.PackageID = pi.PackageID
+            LEFT JOIN packagedestination pd ON p.PackageID = pd.PackageID
+            LEFT JOIN destination d         ON pd.DestinationID = d.DestinationID
+            WHERE b.TravellerID = :traveller_id
+            GROUP BY
+                b.BookingID, b.Date, b.NumberOfPeople, b.Status, b.TotalPrice,
+                p.PackageID, p.Title, p.Description, p.StartDate, p.EndDate, a.Name
+            ORDER BY b.Date DESC
+        ");
+        $stmt->execute([':traveller_id' => $traveller_id]);
+        $bookings = $stmt->fetchAll();
+
+        http_response_code(200);
+        echo json_encode(["bookings" => $bookings]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch bookings: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// GET PACKAGES (browse / filter / sort)
+// POST /api/packages
+// Body: { search?, price?, rating?, duration?, sort? }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/packages/details') === false &&
+    strpos($request_uri, '/api/packages') !== false) {
+
+    // --- Sanitise / read filter params ---
+    $search   = isset($data['search'])   ? trim($data['search'])   : '';
+    $price    = isset($data['price'])    ? trim($data['price'])    : '';
+    $rating   = isset($data['rating'])   ? (int)$data['rating']    : 0;
+    $duration = isset($data['duration']) ? trim($data['duration']) : '';
+    $sort     = isset($data['sort'])     ? trim($data['sort'])     : 'recommended';
+
+    // --- Build WHERE clauses using a whitelist approach ---
+    $conditions = [];
+    $params     = [];
+
+    if ($search !== '') {
+        $conditions[] = "(p.Title LIKE :search OR d.City LIKE :search OR d.Country LIKE :search)";
+        $params[':search'] = '%' . $search . '%';
+    }
+
+    // Price filter: "0-5000", "5000-15000", "15000+"
+    if ($price !== '') {
+        if ($price === '0-5000') {
+            $conditions[] = "p.TotalPrice < 5000";
+        } elseif ($price === '5000-15000') {
+            $conditions[] = "p.TotalPrice BETWEEN 5000 AND 15000";
+        } elseif ($price === '15000+') {
+            $conditions[] = "p.TotalPrice > 15000";
+        }
+    }
+
+    // Rating filter: minimum average package review rating
+    if ($rating > 0) {
+        $conditions[] = "COALESCE(AVG_RATING.avg_rating, 0) >= :rating";
+        $params[':rating'] = $rating;
+    }
+
+    // Duration filter in nights: "1-3", "4-7", "8-14", "15+"
+    if ($duration !== '') {
+        if ($duration === '1-3') {
+            $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 1 AND 3";
+        } elseif ($duration === '4-7') {
+            $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 4 AND 7";
+        } elseif ($duration === '8-14') {
+            $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 8 AND 14";
+        } elseif ($duration === '15+') {
+            $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) >= 15";
+        }
+    }
+
+    $where = count($conditions) > 0
+        ? 'WHERE ' . implode(' AND ', $conditions)
+        : '';
+
+    // --- Sort order whitelist ---
+    $order_map = [
+        'recommended' => 'COALESCE(AVG_RATING.avg_rating, 0) DESC',
+        'price-low'   => 'p.TotalPrice ASC',
+        'price-high'  => 'p.TotalPrice DESC',
+    ];
+    $order_by = isset($order_map[$sort]) ? $order_map[$sort] : $order_map['recommended'];
 
     $sql = "
         SELECT
-            p.PackageID, p.Title, p.Description, p.TotalPrice,
-            p.StartDate, p.EndDate, p.MaxParticipants,
-            a.Name AS agencyName,
-            ROUND(AVG(pr.Rating), 1) AS avgRating,
-            COUNT(DISTINCT pr.ReviewID) AS reviewCount
-        FROM Package p
-        LEFT JOIN Agency a ON p.AgencyID = a.AgencyID
-        LEFT JOIN PackageDestination pd ON p.PackageID = pd.PackageID
-        LEFT JOIN Destination d ON pd.DestinationID = d.DestinationID
-        LEFT JOIN PackageReview pr ON p.PackageID = pr.PackageID
-        WHERE $whereStr
-        GROUP BY p.PackageID
-        ORDER BY $sortCol $sortDir
-        LIMIT :limit OFFSET :offset
+            p.PackageID,
+            a.Name                              AS AgencyName,
+            p.Title,
+            p.Description,
+            p.StartDate,
+            p.EndDate,
+            DATEDIFF(p.EndDate, p.StartDate)    AS Nights,
+            p.MaxParticipants,
+            p.TotalPrice,
+            MIN(pi.ImageURL)                    AS ThumbnailURL,
+            MIN(d.City)                         AS City,
+            MIN(d.Country)                      AS Country,
+            ROUND(COALESCE(AVG_RATING.avg_rating, 0), 1) AS AvgRating,
+            COALESCE(AVG_RATING.review_count, 0) AS ReviewCount
+        FROM package p
+        JOIN agency a ON p.AgencyID = a.AgencyID
+        LEFT JOIN packageimage pi ON p.PackageID = pi.PackageID
+        LEFT JOIN packagedestination pd ON p.PackageID = pd.PackageID
+        LEFT JOIN destination d ON pd.DestinationID = d.DestinationID
+        LEFT JOIN (
+            SELECT PackageID,
+                   AVG(Rating)   AS avg_rating,
+                   COUNT(*)      AS review_count
+            FROM packagereview
+            GROUP BY PackageID
+        ) AS AVG_RATING ON p.PackageID = AVG_RATING.PackageID
+        $where
+        GROUP BY
+            p.PackageID,
+            a.Name,
+            p.Title,
+            p.Description,
+            p.StartDate,
+            p.EndDate,
+            p.MaxParticipants,
+            p.TotalPrice,
+            AVG_RATING.avg_rating,
+            AVG_RATING.review_count
+        ORDER BY $order_by
     ";
 
-    $stmt = $pdo->prepare($sql);
-    foreach ($params as $k => $v) $stmt->bindValue($k, $v);
-    $stmt->bindValue(':limit',  $limit,  PDO::PARAM_INT);
-    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $stmt->execute();
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $packages = $stmt->fetchAll();
 
-    respond(200, ["success" => true, "total" => $total, "page" => $page, "data" => $stmt->fetchAll()]);
+        http_response_code(200);
+        echo json_encode(["packages" => $packages]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch packages: " . $e->getMessage()]);
+    }
+
+    exit();
 }
 
+// -----------------------------------------------------------------------
+// GET SINGLE PACKAGE DETAILS
+// POST /api/packages/details
+// Body: { package_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/packages/details') !== false) {
 
-if ($method === 'GET' && strpos($uri, '/api/packages/get') !== false) {
-    $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-    if (!$id) respond(400, ["success" => false, "error" => "Missing package id"]);
+    if (empty($data['package_id']) || !is_numeric($data['package_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "A valid package_id is required."]);
+        exit();
+    }
 
-   
-    $stmt = $pdo->prepare("
-        SELECT p.PackageID, p.Title, p.Description, p.TotalPrice, p.StartDate, p.EndDate, p.MaxParticipants,
-               a.AgencyID, a.Name AS agencyName, a.Email AS agencyEmail, a.Phone AS agencyPhone
-        FROM Package p
-        JOIN Agency a ON p.AgencyID = a.AgencyID
-        WHERE p.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $pkg = $stmt->fetch();
-    if (!$pkg) respond(404, ["success" => false, "error" => "Package not found"]);
-
-    $agency = [
-        "agencyID"    => $pkg['AgencyID'],
-        "name"        => $pkg['agencyName'],
-        "email"       => $pkg['agencyEmail'],
-        "phone"       => $pkg['agencyPhone']
-    ];
-    unset($pkg['AgencyID'], $pkg['agencyName'], $pkg['agencyEmail'], $pkg['agencyPhone']);
-
-    
-    $stmt = $pdo->prepare("
-        SELECT d.DestinationID, d.Name, d.City, d.Region, d.Country, d.Description
-        FROM PackageDestination pd JOIN Destination d ON pd.DestinationID = d.DestinationID
-        WHERE pd.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $destinations = $stmt->fetchAll();
-
-    
-    $stmt = $pdo->prepare("
-        SELECT a.AccommodationID, a.Name, a.Type, a.StarRating, a.AveragePricePerNight, a.Street, a.City, a.Country
-        FROM PackageAccommodation pa JOIN Accommodation a ON pa.AccommodationID = a.AccommodationID
-        WHERE pa.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $accommodations = $stmt->fetchAll();
-
-   
-    $stmt = $pdo->prepare("
-        SELECT f.FlightID, f.FlightNumber, f.Airline, f.DepartureDateTime, f.ArrivalDateTime, f.BaseCost,
-               orig.Code AS originCode, orig.Name AS originName, orig.City AS originCity,
-               dest.Code AS destCode,   dest.Name AS destName,   dest.City AS destCity
-        FROM PackageFlight pf
-        JOIN Flight f ON pf.FlightID = f.FlightID
-        JOIN Airport orig ON f.OriginAirportID = orig.AirportID
-        JOIN Airport dest ON f.DestinationAirportID = dest.AirportID
-        WHERE pf.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $rawFlights = $stmt->fetchAll();
-    $flights = array_map(function($f) {
-        return [
-            "flightID"          => $f['FlightID'],
-            "flightNumber"      => $f['FlightNumber'],
-            "airline"           => $f['Airline'],
-            "departureDateTime" => $f['DepartureDateTime'],
-            "arrivalDateTime"   => $f['ArrivalDateTime'],
-            "baseCost"          => $f['BaseCost'],
-            "origin"            => ["code" => $f['originCode'], "name" => $f['originName'], "city" => $f['originCity']],
-            "destination"       => ["code" => $f['destCode'],   "name" => $f['destName'],   "city" => $f['destCity']]
-        ];
-    }, $rawFlights);
-
-    
-    $stmt = $pdo->prepare("
-        SELECT a.AttractionID, a.Name, a.Description, a.EntranceFee, a.OpeningHours, a.City, a.Country
-        FROM PackageAttraction pa JOIN Attraction a ON pa.AttractionID = a.AttractionID
-        WHERE pa.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $attractions = $stmt->fetchAll();
-
-    
-    $stmt = $pdo->prepare("
-        SELECT r.RestaurantID, r.Name, r.Cuisine, r.PriceRange, r.City, r.Country
-        FROM PackageRestaurant pr JOIN Restaurant r ON pr.RestaurantID = r.RestaurantID
-        WHERE pr.PackageID = :id
-    ");
-    $stmt->execute([':id' => $id]);
-    $restaurants = $stmt->fetchAll();
-
-    
-    $stmt = $pdo->prepare("
-        SELECT pr.ReviewID, CONCAT(t.FirstName, ' ', LEFT(t.Surname, 1), '.') AS travellerName,
-               pr.Rating, pr.Comment, pr.CreatedAt
-        FROM PackageReview pr JOIN Traveller t ON pr.TravellerID = t.TravellerID
-        WHERE pr.PackageID = :id
-        ORDER BY pr.CreatedAt DESC
-    ");
-    $stmt->execute([':id' => $id]);
-    $reviews = $stmt->fetchAll();
-
-    respond(200, ["success" => true, "data" => array_merge($pkg, [
-        "agency"         => $agency,
-        "destinations"   => $destinations,
-        "accommodations" => $accommodations,
-        "flights"        => $flights,
-        "attractions"    => $attractions,
-        "restaurants"    => $restaurants,
-        "reviews"        => $reviews
-    ])]);
-}
-
-
-if ($method === 'POST' && strpos($uri, '/api/packages/create') !== false) {
-    $data = getBody();
-    requireFields($data, ['agencyID','title','startDate','endDate','maxParticipants','totalPrice']);
+    $package_id = (int)$data['package_id'];
 
     try {
-        $pdo->beginTransaction();
-
+        // --- Core package + agency ---
         $stmt = $pdo->prepare("
-            INSERT INTO Package (AgencyID, Title, Description, StartDate, EndDate, MaxParticipants, TotalPrice)
-            VALUES (:agencyID, :title, :desc, :startDate, :endDate, :maxP, :price)
+            SELECT
+                p.PackageID,
+                p.Title,
+                p.Description,
+                p.StartDate,
+                p.EndDate,
+                DATEDIFF(p.EndDate, p.StartDate) AS Nights,
+                p.MaxParticipants,
+                p.TotalPrice,
+                a.AgencyID,
+                a.Name    AS AgencyName,
+                a.Email   AS AgencyEmail,
+                a.Phone   AS AgencyPhone,
+                a.City    AS AgencyCity,
+                a.Country AS AgencyCountry
+            FROM package p
+            JOIN agency a ON p.AgencyID = a.AgencyID
+            WHERE p.PackageID = :pid
         ");
-        $stmt->execute([
-            ':agencyID'  => $data['agencyID'],
-            ':title'     => $data['title'],
-            ':desc'      => $data['description'] ?? null,
-            ':startDate' => $data['startDate'],
-            ':endDate'   => $data['endDate'],
-            ':maxP'      => $data['maxParticipants'],
-            ':price'     => $data['totalPrice']
-        ]);
-        $packageID = (int)$pdo->lastInsertId();
+        $stmt->execute([':pid' => $package_id]);
+        $package = $stmt->fetch();
 
-        
-        $links = [
-            'destinationIDs'   => ["PackageDestination",   "DestinationID"],
-            'accommodationIDs' => ["PackageAccommodation",  "AccommodationID"],
-            'flightIDs'        => ["PackageFlight",         "FlightID"],
-            'attractionIDs'    => ["PackageAttraction",     "AttractionID"],
-            'restaurantIDs'    => ["PackageRestaurant",     "RestaurantID"]
-        ];
-
-        foreach ($links as $key => [$table, $col]) {
-            if (!empty($data[$key]) && is_array($data[$key])) {
-                $ins = $pdo->prepare("INSERT IGNORE INTO $table (PackageID, $col) VALUES (:pkgID, :itemID)");
-                foreach ($data[$key] as $itemID) {
-                    $ins->execute([':pkgID' => $packageID, ':itemID' => (int)$itemID]);
-                }
-            }
+        if (!$package) {
+            http_response_code(404);
+            echo json_encode(["error" => "Package not found."]);
+            exit();
         }
 
-        $pdo->commit();
-        respond(201, ["success" => true, "packageID" => $packageID, "message" => "Package created successfully"]);
-    } catch (PDOException $e) {
-        $pdo->rollBack();
-        respond(500, ["success" => false, "error" => "Could not create package: " . $e->getMessage()]);
-    }
-}
-
-
-if ($method === 'PUT' && strpos($uri, '/api/packages/update') !== false) {
-    $data = getBody();
-    requireFields($data, ['packageID','agencyID']);
-
-   
-    $check = $pdo->prepare("SELECT AgencyID FROM Package WHERE PackageID = :id");
-    $check->execute([':id' => $data['packageID']]);
-    $row = $check->fetch();
-    if (!$row) respond(404, ["success" => false, "error" => "Package not found"]);
-    if ((int)$row['AgencyID'] !== (int)$data['agencyID']) respond(403, ["success" => false, "error" => "Unauthorized"]);
-
-    $fields = [];
-    $params = [':id' => $data['packageID']];
-    $allowed = ['title' => 'Title', 'description' => 'Description', 'startDate' => 'StartDate',
-                'endDate' => 'EndDate', 'maxParticipants' => 'MaxParticipants', 'totalPrice' => 'TotalPrice'];
-
-    foreach ($allowed as $key => $col) {
-        if (isset($data[$key])) {
-            $fields[]        = "$col = :$key";
-            $params[":$key"] = $data[$key];
-        }
-    }
-
-    if (empty($fields)) respond(400, ["success" => false, "error" => "No fields to update"]);
-
-    $pdo->prepare("UPDATE Package SET " . implode(", ", $fields) . " WHERE PackageID = :id")->execute($params);
-    respond(200, ["success" => true, "message" => "Package updated successfully"]);
-}
-
-
-if ($method === 'DELETE' && strpos($uri, '/api/packages/delete') !== false) {
-    $data = getBody();
-    requireFields($data, ['packageID','agencyID']);
-
-    $check = $pdo->prepare("SELECT AgencyID FROM Package WHERE PackageID = :id");
-    $check->execute([':id' => $data['packageID']]);
-    $row = $check->fetch();
-    if (!$row) respond(404, ["success" => false, "error" => "Package not found"]);
-    if ((int)$row['AgencyID'] !== (int)$data['agencyID']) respond(403, ["success" => false, "error" => "Unauthorized"]);
-
-    $pdo->prepare("DELETE FROM Package WHERE PackageID = :id")->execute([':id' => $data['packageID']]);
-    respond(200, ["success" => true, "message" => "Package deleted successfully"]);
-}
-
-
-if ($method === 'POST' && strpos($uri, '/api/bookings/create') !== false) {
-    $data = getBody();
-    requireFields($data, ['travellerID','packageID','numberOfPeople','totalPrice']);
-
-    
-    $cap = $pdo->prepare("
-        SELECT p.MaxParticipants, COALESCE(SUM(b.NumberOfPeople), 0) AS booked
-        FROM Package p
-        LEFT JOIN Booking b ON p.PackageID = b.PackageID AND b.Status != 'Cancelled'
-        WHERE p.PackageID = :id
-        GROUP BY p.PackageID
-    ");
-    $cap->execute([':id' => $data['packageID']]);
-    $capRow = $cap->fetch();
-    if (!$capRow) respond(404, ["success" => false, "error" => "Package does not exist"]);
-    if (($capRow['booked'] + $data['numberOfPeople']) > $capRow['MaxParticipants']) {
-        respond(409, ["success" => false, "error" => "Not enough spots available"]);
-    }
-
-    try {
+        // --- Images ---
         $stmt = $pdo->prepare("
-            INSERT INTO Booking (TravellerID, PackageID, NumberOfPeople, Status, TotalPrice)
-            VALUES (:tid, :pid, :num, 'Pending', :price)
+            SELECT ImageURL FROM packageimage WHERE PackageID = :pid
         ");
-        $stmt->execute([
-            ':tid'   => $data['travellerID'],
-            ':pid'   => $data['packageID'],
-            ':num'   => $data['numberOfPeople'],
-            ':price' => $data['totalPrice']
-        ]);
-        respond(201, ["success" => true, "bookingID" => (int)$pdo->lastInsertId(), "status" => "Pending", "message" => "Booking created successfully"]);
-    } catch (PDOException $e) {
-        respond(500, ["success" => false, "error" => "Booking failed: " . $e->getMessage()]);
-    }
-}
+        $stmt->execute([':pid' => $package_id]);
+        $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-
-if ($method === 'GET' && strpos($uri, '/api/bookings/list') !== false) {
-    $tid = isset($_GET['travellerID']) ? (int)$_GET['travellerID'] : 0;
-    if (!$tid) respond(400, ["success" => false, "error" => "Missing travellerID"]);
-
-    $stmt = $pdo->prepare("
-        SELECT b.BookingID, p.Title AS packageTitle, a.Name AS agencyName,
-               b.Date, b.NumberOfPeople, b.Status, b.TotalPrice
-        FROM Booking b
-        JOIN Package p ON b.PackageID = p.PackageID
-        JOIN Agency a ON p.AgencyID = a.AgencyID
-        WHERE b.TravellerID = :tid
-        ORDER BY b.Date DESC
-    ");
-    $stmt->execute([':tid' => $tid]);
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-if ($method === 'POST' && strpos($uri, '/api/reviews/package') !== false) {
-    $data = getBody();
-    requireFields($data, ['travellerID','packageID','rating']);
-    if ($data['rating'] < 1 || $data['rating'] > 5) respond(400, ["success" => false, "error" => "Rating must be between 1 and 5"]);
-
-    try {
+        // --- Destinations ---
         $stmt = $pdo->prepare("
-            INSERT INTO PackageReview (TravellerID, PackageID, Rating, Comment)
-            VALUES (:tid, :pid, :rating, :comment)
+            SELECT d.DestinationID, d.Name, d.City, d.Region, d.Country, d.Description
+            FROM destination d
+            JOIN packagedestination pd ON d.DestinationID = pd.DestinationID
+            WHERE pd.PackageID = :pid
         ");
-        $stmt->execute([
-            ':tid'     => $data['travellerID'],
-            ':pid'     => $data['packageID'],
-            ':rating'  => $data['rating'],
-            ':comment' => $data['comment'] ?? null
-        ]);
-        respond(201, ["success" => true, "reviewID" => (int)$pdo->lastInsertId(), "message" => "Review submitted successfully"]);
-    } catch (PDOException $e) {
-        $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "Duplicate reviews are not allowed" : "Review failed: " . $e->getMessage();
-        respond($code, ["success" => false, "error" => $msg]);
-    }
-}
+        $stmt->execute([':pid' => $package_id]);
+        $destinations = $stmt->fetchAll();
 
-
-if ($method === 'POST' && strpos($uri, '/api/reviews/agency') !== false) {
-    $data = getBody();
-    requireFields($data, ['travellerID','agencyID','rating']);
-    if ($data['rating'] < 1 || $data['rating'] > 5) respond(400, ["success" => false, "error" => "Rating must be between 1 and 5"]);
-
-    try {
+        // --- Flights (with airport codes) ---
         $stmt = $pdo->prepare("
-            INSERT INTO AgencyReview (TravellerID, AgencyID, Rating, Comment)
-            VALUES (:tid, :aid, :rating, :comment)
+            SELECT
+                f.FlightID,
+                f.FlightNumber,
+                f.Airline,
+                f.DepartureDateTime,
+                f.ArrivalDateTime,
+                f.BaseCost,
+                origin.Code        AS OriginCode,
+                origin.City        AS OriginCity,
+                dest_ap.Code       AS DestinationCode,
+                dest_ap.City       AS DestinationCity
+            FROM flight f
+            JOIN packageflight pf ON f.FlightID = pf.FlightID
+            JOIN airport origin   ON f.OriginAirportID      = origin.AirportID
+            JOIN airport dest_ap  ON f.DestinationAirportID = dest_ap.AirportID
+            WHERE pf.PackageID = :pid
+            ORDER BY f.DepartureDateTime ASC
         ");
-        $stmt->execute([
-            ':tid'     => $data['travellerID'],
-            ':aid'     => $data['agencyID'],
-            ':rating'  => $data['rating'],
-            ':comment' => $data['comment'] ?? null
-        ]);
-        respond(201, ["success" => true, "reviewID" => (int)$pdo->lastInsertId(), "message" => "Review submitted successfully"]);
-    } catch (PDOException $e) {
-        $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "Duplicate reviews are not allowed" : "Review failed: " . $e->getMessage();
-        respond($code, ["success" => false, "error" => $msg]);
-    }
-}
+        $stmt->execute([':pid' => $package_id]);
+        $flights = $stmt->fetchAll();
 
-
-if ($method === 'POST' && strpos($uri, '/api/grouptrips/create') !== false) {
-    $data = getBody();
-    requireFields($data, ['agencyID','maxCapacity','startDate','endDate']);
-
-    try {
+        // --- Accommodations ---
         $stmt = $pdo->prepare("
-            INSERT INTO GroupTrip (AgencyID, MaxCapacity, Status, StartDate, EndDate)
-            VALUES (:aid, :cap, 'Open', :startDate, :endDate)
+            SELECT
+                ac.AccommodationID,
+                ac.Name,
+                ac.Type,
+                ac.StarRating,
+                ac.AveragePricePerNight,
+                ac.Description,
+                ac.Street,
+                ac.City,
+                ac.Country,
+                MIN(ai.ImageURL) AS ImageURL
+            FROM accommodation ac
+            JOIN packageaccommodation pa ON ac.AccommodationID = pa.AccommodationID
+            LEFT JOIN accommodationimage ai ON ac.AccommodationID = ai.AccommodationID
+            WHERE pa.PackageID = :pid
+            GROUP BY
+                ac.AccommodationID, ac.Name, ac.Type, ac.StarRating,
+                ac.AveragePricePerNight, ac.Description, ac.Street, ac.City, ac.Country
         ");
-        $stmt->execute([
-            ':aid'       => $data['agencyID'],
-            ':cap'       => $data['maxCapacity'],
-            ':startDate' => $data['startDate'],
-            ':endDate'   => $data['endDate']
-        ]);
-        respond(201, ["success" => true, "groupTripID" => (int)$pdo->lastInsertId(), "status" => "Open", "message" => "Group trip created successfully"]);
-    } catch (PDOException $e) {
-        respond(500, ["success" => false, "error" => "Could not create group trip: " . $e->getMessage()]);
-    }
-}
+        $stmt->execute([':pid' => $package_id]);
+        $accommodations = $stmt->fetchAll();
 
+        // --- Attractions ---
+        $stmt = $pdo->prepare("
+            SELECT
+                at.AttractionID,
+                at.Name,
+                at.Description,
+                at.EntranceFee,
+                at.OpeningHours,
+                at.Street,
+                at.City,
+                at.Country
+            FROM attraction at
+            JOIN packageattraction pa ON at.AttractionID = pa.AttractionID
+            WHERE pa.PackageID = :pid
+        ");
+        $stmt->execute([':pid' => $package_id]);
+        $attractions = $stmt->fetchAll();
 
-if ($method === 'GET' && strpos($uri, '/api/grouptrips/list') !== false) {
-    $status  = $_GET['status'] ?? null;
-    $allowed = ['Open','Full','Completed','Cancelled'];
+        // --- Restaurants ---
+        $stmt = $pdo->prepare("
+            SELECT
+                r.RestaurantID,
+                r.Name,
+                r.Cuisine,
+                r.PriceRange,
+                r.ContactNumber,
+                r.Street,
+                r.City,
+                r.Country
+            FROM restaurant r
+            JOIN packagerestaurant pr ON r.RestaurantID = pr.RestaurantID
+            WHERE pr.PackageID = :pid
+        ");
+        $stmt->execute([':pid' => $package_id]);
+        $restaurants = $stmt->fetchAll();
 
-    $where  = "1=1";
-    $params = [];
+        // --- Reviews (with traveller first name) ---
+        $stmt = $pdo->prepare("
+            SELECT
+                rv.ReviewID,
+                t.FirstName AS TravellerName,
+                rv.Rating,
+                rv.Comment,
+                rv.CreatedAt
+            FROM packagereview rv
+            JOIN traveller t ON rv.TravellerID = t.TravellerID
+            WHERE rv.PackageID = :pid
+            ORDER BY rv.CreatedAt DESC
+        ");
+        $stmt->execute([':pid' => $package_id]);
+        $reviews = $stmt->fetchAll();
 
-    if ($status && in_array($status, $allowed)) {
-        $where            = "g.Status = :status";
-        $params[':status'] = $status;
-    }
-
-    $stmt = $pdo->prepare("
-        SELECT g.GroupTripID, a.Name AS agencyName, g.MaxCapacity,
-               COUNT(m.TravellerID) AS currentMembers, g.Status, g.StartDate, g.EndDate
-        FROM GroupTrip g
-        JOIN Agency a ON g.AgencyID = a.AgencyID
-        LEFT JOIN GroupTripMember m ON g.GroupTripID = m.GroupTripID
-        WHERE $where
-        GROUP BY g.GroupTripID
-        ORDER BY g.StartDate ASC
-    ");
-    $stmt->execute($params);
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-if ($method === 'POST' && strpos($uri, '/api/grouptrips/join') !== false) {
-    $data = getBody();
-    requireFields($data, ['groupTripID','travellerID']);
-
-    
-    $cap = $pdo->prepare("
-        SELECT g.MaxCapacity, COUNT(m.TravellerID) AS members, g.Status
-        FROM GroupTrip g
-        LEFT JOIN GroupTripMember m ON g.GroupTripID = m.GroupTripID
-        WHERE g.GroupTripID = :id
-        GROUP BY g.GroupTripID
-    ");
-    $cap->execute([':id' => $data['groupTripID']]);
-    $capRow = $cap->fetch();
-    if (!$capRow) respond(404, ["success" => false, "error" => "Group trip does not exist"]);
-    if ($capRow['Status'] !== 'Open') respond(409, ["success" => false, "error" => "Group trip is not open for joining"]);
-    if ($capRow['members'] >= $capRow['MaxCapacity']) respond(409, ["success" => false, "error" => "Group trip is full"]);
-
-    try {
-        $pdo->prepare("INSERT INTO GroupTripMember (GroupTripID, TravellerID) VALUES (:gid, :tid)")
-            ->execute([':gid' => $data['groupTripID'], ':tid' => $data['travellerID']]);
-
-        
-        if (($capRow['members'] + 1) >= $capRow['MaxCapacity']) {
-            $pdo->prepare("UPDATE GroupTrip SET Status = 'Full' WHERE GroupTripID = :id")
-                ->execute([':id' => $data['groupTripID']]);
+        // --- Average rating ---
+        $avg_rating    = 0;
+        $review_count  = count($reviews);
+        if ($review_count > 0) {
+            $avg_rating = round(
+                array_sum(array_column($reviews, 'Rating')) / $review_count,
+                1
+            );
         }
 
-        respond(200, ["success" => true, "message" => "Successfully joined group trip"]);
+        http_response_code(200);
+        echo json_encode([
+            "package" => [
+                "PackageID"      => (int)$package['PackageID'],
+                "Title"          => $package['Title'],
+                "Description"    => $package['Description'],
+                "StartDate"      => $package['StartDate'],
+                "EndDate"        => $package['EndDate'],
+                "Nights"         => (int)$package['Nights'],
+                "MaxParticipants"=> (int)$package['MaxParticipants'],
+                "TotalPrice"     => (float)$package['TotalPrice'],
+                "AvgRating"      => $avg_rating,
+                "ReviewCount"    => $review_count,
+                "Images"         => $images,
+                "Agency"         => [
+                    "AgencyID"   => (int)$package['AgencyID'],
+                    "Name"       => $package['AgencyName'],
+                    "Email"      => $package['AgencyEmail'],
+                    "Phone"      => $package['AgencyPhone'],
+                    "City"       => $package['AgencyCity'],
+                    "Country"    => $package['AgencyCountry'],
+                ],
+                "Destinations"   => $destinations,
+                "Flights"        => $flights,
+                "Accommodations" => $accommodations,
+                "Attractions"    => $attractions,
+                "Restaurants"    => $restaurants,
+                "Reviews"        => $reviews,
+            ]
+        ]);
+
     } catch (PDOException $e) {
-        $code = $e->getCode() == 23000 ? 409 : 500;
-        $msg  = $e->getCode() == 23000 ? "You have already joined this group trip" : "Could not join: " . $e->getMessage();
-        respond($code, ["success" => false, "error" => $msg]);
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch package details: " . $e->getMessage()]);
     }
+
+    exit();
 }
 
-
-if ($method === 'GET' && strpos($uri, '/api/destinations/list') !== false) {
-    $stmt = $pdo->query("SELECT DestinationID, Name, City, Region, Country, Description FROM Destination ORDER BY Country, City");
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-if ($method === 'GET' && strpos($uri, '/api/accommodations/list') !== false) {
-    $stmt = $pdo->query("SELECT AccommodationID, Name, Type, StarRating, AveragePricePerNight, City, Country FROM Accommodation ORDER BY StarRating DESC");
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-if ($method === 'GET' && strpos($uri, '/api/attractions/list') !== false) {
-    $stmt = $pdo->query("SELECT AttractionID, Name, Description, EntranceFee, OpeningHours, City, Country FROM Attraction ORDER BY City");
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-if ($method === 'GET' && strpos($uri, '/api/restaurants/list') !== false) {
-    $stmt = $pdo->query("SELECT RestaurantID, Name, Cuisine, PriceRange, City, Country FROM Restaurant ORDER BY City");
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-if ($method === 'GET' && strpos($uri, '/api/flights/list') !== false) {
-    $stmt = $pdo->query("
-        SELECT f.FlightID, f.FlightNumber, f.Airline, f.DepartureDateTime, f.ArrivalDateTime, f.BaseCost,
-               orig.Code AS originCode, orig.City AS originCity,
-               dest.Code AS destCode,   dest.City AS destCity
-        FROM Flight f
-        JOIN Airport orig ON f.OriginAirportID = orig.AirportID
-        JOIN Airport dest ON f.DestinationAirportID = dest.AirportID
-        ORDER BY f.DepartureDateTime
-    ");
-    respond(200, ["success" => true, "data" => $stmt->fetchAll()]);
-}
-
-
-respond(404, ["success" => false, "error" => "Endpoint not found"]);
+http_response_code(404);
+echo json_encode(["error" => "Endpoint not found."]);
+?>
