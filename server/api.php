@@ -3,12 +3,12 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
-require_once 'config.php';
+//require_once 'config.php';
 
-$db_host = DB_HOST;
-$db_user = DB_USER;
-$db_pass = DB_PASS;
-$db_name = DB_NAME;
+$db_host = "127.0.0.1";
+$db_user = "root";
+$db_pass = "Silver4monsters";
+$db_name = "tripistry";
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 
@@ -27,7 +27,10 @@ try {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+$request_uri = isset($_GET['route']) 
+    ? $_GET['route'] 
+    : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 if ($method !== 'POST') {
     http_response_code(405);
@@ -1227,6 +1230,207 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         echo json_encode(["error" => "Failed to fetch package details: " . $e->getMessage()]);
     }
 
+    exit();
+}
+// -----------------------------------------------------------------------
+// REVIEWS: CREATE
+// POST /api/review/create
+// Body: { traveller_id, package_id, rating, comment }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/review/create') !== false) {
+    if (empty($data['traveller_id']) || empty($data['package_id']) || empty($data['rating'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "traveller_id, package_id, and rating are required."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO packagereview (PackageID, TravellerID, Rating, Comment, CreatedAt)
+            VALUES (:pid, :tid, :rating, :comment, NOW())
+        ");
+        $stmt->execute([
+            ':pid'     => (int)$data['package_id'],
+            ':tid'     => (int)$data['traveller_id'],
+            ':rating'  => (int)$data['rating'],
+            ':comment' => trim($data['comment'] ?? '')
+        ]);
+
+        http_response_code(201);
+        echo json_encode(["message" => "Review created successfully.", "review_id" => (int)$pdo->lastInsertId()]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create review: " . $e->getMessage()]);
+    }
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// REVIEWS: UPDATE
+// POST /api/review/update
+// Body: { review_id, traveller_id, rating, comment }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/review/update') !== false) {
+    if (empty($data['review_id']) || empty($data['traveller_id']) || empty($data['rating'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "review_id, traveller_id, and rating are required."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE packagereview 
+            SET Rating = :rating, Comment = :comment
+            WHERE ReviewID = :rid AND TravellerID = :tid
+        ");
+        $stmt->execute([
+            ':rating'  => (int)$data['rating'],
+            ':comment' => trim($data['comment'] ?? ''),
+            ':rid'     => (int)$data['review_id'],
+            ':tid'     => (int)$data['traveller_id']
+        ]);
+
+        http_response_code(200);
+        echo json_encode(["message" => "Review updated successfully."]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to update review: " . $e->getMessage()]);
+    }
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// REVIEWS: DELETE
+// POST /api/review/delete
+// Body: { review_id, traveller_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/review/delete') !== false) {
+    if (empty($data['review_id']) || empty($data['traveller_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "review_id and traveller_id are required."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("DELETE FROM packagereview WHERE ReviewID = :rid AND TravellerID = :tid");
+        $stmt->execute([
+            ':rid' => (int)$data['review_id'],
+            ':tid' => (int)$data['traveller_id']
+        ]);
+
+        http_response_code(200);
+        echo json_encode(["message" => "Review deleted successfully."]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to delete review: " . $e->getMessage()]);
+    }
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// REVIEWS: TRAVELLER DASHBOARD
+// POST /api/review/traveller
+// Body: { traveller_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/review/traveller') !== false) {
+    if (empty($data['traveller_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "traveller_id is required."]);
+        exit();
+    }
+
+    $tid = (int)$data['traveller_id'];
+
+    try {
+        // 1. Get Eligible Packages (Booked, ended, not yet reviewed)
+        $stmtEligible = $pdo->prepare("
+            SELECT p.PackageID, p.Title, p.EndDate
+            FROM booking b
+            JOIN package p ON b.PackageID = p.PackageID
+            WHERE b.TravellerID = :tid 
+              AND b.Status != 'Cancelled'
+              AND p.EndDate < CURDATE()
+              AND NOT EXISTS (
+                  SELECT 1 FROM packagereview pr 
+                  WHERE pr.PackageID = p.PackageID AND pr.TravellerID = b.TravellerID
+              )
+            GROUP BY p.PackageID
+            ORDER BY p.EndDate DESC
+        ");
+        $stmtEligible->execute([':tid' => $tid]);
+        $eligible = $stmtEligible->fetchAll();
+
+        // 2. Get Review History
+        $stmtHistory = $pdo->prepare("
+            SELECT pr.ReviewID, pr.PackageID, p.Title, pr.Rating, pr.Comment, pr.CreatedAt
+            FROM packagereview pr
+            JOIN package p ON pr.PackageID = p.PackageID
+            WHERE pr.TravellerID = :tid
+            ORDER BY pr.CreatedAt DESC
+        ");
+        $stmtHistory->execute([':tid' => $tid]);
+        $history = $stmtHistory->fetchAll();
+
+        http_response_code(200);
+        echo json_encode([
+            "eligible_packages" => $eligible,
+            "review_history"    => $history
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch traveller reviews: " . $e->getMessage()]);
+    }
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// REVIEWS: AGENCY DASHBOARD
+// POST /api/review/agency
+// Body: { agency_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/review/agency') !== false) {
+    if (empty($data['agency_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "agency_id is required."]);
+        exit();
+    }
+
+    $aid = (int)$data['agency_id'];
+
+    try {
+        // 1. Get all reviews for this agency's packages
+        $stmtReviews = $pdo->prepare("
+            SELECT pr.ReviewID, pr.Rating, pr.Comment, pr.CreatedAt, p.Title as PackageName, t.FirstName, t.Surname
+            FROM packagereview pr
+            JOIN package p ON pr.PackageID = p.PackageID
+            JOIN traveller t ON pr.TravellerID = t.TravellerID
+            WHERE p.AgencyID = :aid
+            ORDER BY pr.CreatedAt DESC
+        ");
+        $stmtReviews->execute([':aid' => $aid]);
+        $reviews = $stmtReviews->fetchAll();
+
+        // 2. Calculate metrics
+        $totalReviews = count($reviews);
+        $avgPackageRating = 0;
+        
+        if ($totalReviews > 0) {
+            $totalStars = array_sum(array_column($reviews, 'Rating'));
+            $avgPackageRating = round($totalStars / $totalReviews, 1);
+        }
+
+        http_response_code(200);
+        echo json_encode([
+            "metrics" => [
+                "total_reviews" => $totalReviews,
+                "avg_rating" => $avgPackageRating
+            ],
+            "reviews" => $reviews
+        ]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to fetch agency reviews: " . $e->getMessage()]);
+    }
     exit();
 }
 
