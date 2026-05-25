@@ -75,9 +75,16 @@ function createCard(booking) {
             ? `<li><i class="bi bi-people"></i> ${booking.NumberOfPeople} people</li>`
             : ''}
             </ul>
-            <a href="packagedetails.html?id=${booking.PackageID}" class="btn-outline">
-                View package <i class="bi bi-chevron-double-right"></i>
-            </a>
+            <div style="display: flex; gap: 10px;">
+                <a href="packagedetails.html?id=${booking.PackageID}" class="btn-outline" style="flex: 1; text-align: center;">
+                    View package <i class="bi bi-chevron-double-right"></i>
+                </a>
+                ${booking.Status === 'Pending'
+                    ? `<button class="btn-cancel-booking btn-outline" data-id="${booking.BookingID}" style="flex: 1; border-color: #e05555; color: #e05555;">
+                           Cancel <i class="bi bi-x-circle"></i>
+                       </button>`
+                    : ''}
+            </div>
         </div>`;
 
     return card;
@@ -130,3 +137,48 @@ async function fetchBookings() {
 }
 
 fetchBookings();
+
+// -----------------------------------------------------------------------
+// Handle Cancel Booking
+// -----------------------------------------------------------------------
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('btn-cancel-booking')) {
+        if (!confirm("Are you sure you want to cancel this pending booking?")) return;
+
+        const bookingId = e.target.getAttribute('data-id');
+        if (!bookingId) return;
+
+        const btn = e.target;
+        const originalText = btn.textContent;
+        btn.textContent = 'Cancelling...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/booking/cancel`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    booking_id: parseInt(bookingId),
+                    traveller_id: user.id
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                alert(data.error || 'Failed to cancel booking.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            // Refresh the bookings list to instantly show the red 'Cancelled' badge
+            fetchBookings();
+
+        } catch (err) {
+            alert('Error communicating with the server.');
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    }
+});

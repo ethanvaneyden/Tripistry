@@ -174,14 +174,16 @@
         <div class="price-summary-box">
           <div class="price-row">
             <span>Base Price (per person):</span>
-            <span id="basePriceDisplay">R14 500.00</span>
+            <span id="pricePerPersonDisplay">—</span>
           </div>
           <div class="price-row total-row">
             <span>Total Due:</span>
-            <span id="totalPriceDisplay">R14 500.00</span>
+            <span id="totalPriceDisplay">—</span>
           </div>
         </div>
       </div>
+
+      <div id="bookingFeedback" class="booking-feedback" style="display:none"></div>
 
       <div class="modal-actions">
         <button class="finalize-btn" onclick="submitBookingToBackend()">

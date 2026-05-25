@@ -224,19 +224,26 @@ function renderBookingWidget(pkg) {
         ${pkg.Agency.Phone
             ? `<li><i class="bi bi-telephone"></i> ${pkg.Agency.Phone}</li>`
             : ''}
-        ${pkg.MaxParticipants
+        ${parseInt(pkg.MaxParticipants) > 1
             ? `<li><i class="bi bi-people"></i> Max ${pkg.MaxParticipants} participants</li>`
             : ''}`;
 
-    // Wire up booking button (stores packageId for future booking endpoint)
-    document.querySelector('.btn-reserve').addEventListener('click', () => {
-        const user = JSON.parse(sessionStorage.getItem('user') || 'null');
-        if (!user || user.role !== 'traveller') {
-            alert('Please log in as a traveller to book this package.');
-            return;
-        }
-        alert(`Booking request sent for "${pkg.Title}"!\nA confirmation will be sent to ${user.email}.`);
+    // Initialise the booking modal with live package data
+    initBookingModal({
+        packageId:       pkg.PackageID,
+        title:           pkg.Title,
+        startDate:       pkg.StartDate,
+        endDate:         pkg.EndDate,
+        nights:          pkg.Nights,
+        pricePerPerson:  pkg.TotalPrice,
+        maxParticipants: pkg.MaxParticipants || null
     });
+
+    // Disable button if traveller already has an active booking
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (user && user.role === 'traveller') {
+        checkAlreadyBooked(pkg.PackageID, user.id);
+    }
 }
 
 // -----------------------------------------------------------------------
@@ -296,3 +303,26 @@ async function init() {
 }
 
 init();
+
+// -----------------------------------------------------------------------
+// Check if logged-in traveller already booked this package
+// -----------------------------------------------------------------------
+async function checkAlreadyBooked(packageId, travellerId) {
+    try {
+        const res  = await fetch(`${API_BASE}/api/booking/check`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ traveller_id: travellerId, package_id: packageId })
+        });
+        const data = await res.json();
+        if (res.ok && data.already_booked) {
+            const btn = document.querySelector('.btn-reserve');
+            btn.disabled   = true;
+            btn.innerHTML  = `<i class="bi bi-check-circle-fill"></i> Already Booked`;
+            btn.style.opacity = '0.6';
+            btn.style.cursor  = 'not-allowed';
+        }
+    } catch (_) {
+        // silently ignore — non-critical
+    }
+}
