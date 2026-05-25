@@ -135,7 +135,7 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
             ':name'        => $data['name'],
             ':surname'     => $data['surname'],
             ':email'       => $data['email'],
-            ':password'    => password_hash($data['password'], PASSWORD_DEFAULT),
+            ':password'    => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'       => $data['phone'],
             ':nationality' => $data['nationality'],
             ':dob'         => $data['dateofbirth']
