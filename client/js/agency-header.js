@@ -3,9 +3,7 @@ const navbar = document.getElementById('navbar');
 function createNavbar() {
     navbar.innerHTML = `
         <div class="nav-brand">
-            <a href="dashboard.html">
-                <img src="../assets/logo.png" alt="Triptistry" class="nav-logo">
-            </a>
+        <img src="../assets/logo.png" alt="Triptistry" class="nav-logo">
         </div>
         <div class="nav-links">
             <a href="../agency/agencydashboard.html" class="nav-link">
