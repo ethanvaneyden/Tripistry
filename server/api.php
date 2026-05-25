@@ -10,6 +10,21 @@ $db_user = DB_USER;
 $db_pass = DB_PASS;
 $db_name = DB_NAME;
 
+define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
+ 
+function write_log(string $level, string $event, array $context = []): void {
+    $dir = dirname(LOG_FILE);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0750, true);
+    }
+    $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $uri     = $_SERVER['REQUEST_URI']  ?? '';
+    $ts      = date('Y-m-d H:i:s');
+    $ctx     = empty($context) ? '' : ' ' . json_encode($context);
+    $line    = "[$ts] [$level] [$ip] $event$ctx URI=$uri" . PHP_EOL;
+    file_put_contents(LOG_FILE, $line, FILE_APPEND | LOCK_EX);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 
     exit;
