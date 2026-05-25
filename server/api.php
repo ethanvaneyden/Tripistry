@@ -47,7 +47,7 @@ try {
 
 define('LOGIN_MAX_ATTEMPTS',    5);
 define('LOGIN_WINDOW_SECONDS',  600);   
-define('LOGIN_LOCKOUT_SECONDS', 10);   
+define('LOGIN_LOCKOUT_SECONDS', 900);   
 
 
 $pdo->exec("
@@ -1043,7 +1043,12 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
                 b.BookingID,
                 b.Date           AS BookingDate,
                 b.NumberOfPeople,
-                b.Status,
+                CASE
+                    WHEN b.Status = 'Cancelled' THEN 'Cancelled'
+                    WHEN CURDATE() < p.StartDate THEN 'Pending'
+                    WHEN CURDATE() BETWEEN p.StartDate AND p.EndDate THEN 'Confirmed'
+                    ELSE 'Completed'
+                END AS Status,
                 b.TotalPrice     AS BookingPrice,
                 p.PackageID,
                 p.Title,
@@ -1063,7 +1068,7 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
             LEFT JOIN destination d         ON pd.DestinationID = d.DestinationID
             WHERE b.TravellerID = :traveller_id
             GROUP BY
-                b.BookingID, b.Date, b.NumberOfPeople, b.Status, b.TotalPrice,
+                b.BookingID, b.Date, b.NumberOfPeople, b.Status, b.TotalPrice, p.StartDate, p.EndDate,
                 p.PackageID, p.Title, p.Description, p.StartDate, p.EndDate, a.Name
             ORDER BY b.Date DESC
         ");
@@ -1353,9 +1358,15 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 b.BookingID,
                 CONCAT(t.FirstName, ' ', t.Surname) AS PassengerName,
                 b.NumberOfPeople AS SeatsClaimed,
-                b.Status AS FinancialStatus
+                CASE
+                    WHEN b.Status = 'Cancelled' THEN 'Cancelled'
+                    WHEN CURDATE() < p.StartDate THEN 'Pending'
+                    WHEN CURDATE() BETWEEN p.StartDate AND p.EndDate THEN 'Confirmed'
+                    ELSE 'Completed'
+                END AS FinancialStatus
             FROM booking b
             JOIN traveller t ON b.TravellerID = t.TravellerID
+            JOIN package p   ON b.PackageID   = p.PackageID
             WHERE b.PackageID = :pid AND b.Status NOT IN ('Cancelled')
             ORDER BY b.Date DESC
         ");
@@ -1544,7 +1555,6 @@ if (strpos($request_uri, '/api/review/traveller') !== false) {
             JOIN package p ON b.PackageID = p.PackageID
             WHERE b.TravellerID = :tid 
               AND b.Status != 'Cancelled'
-            
               AND NOT EXISTS (
                   SELECT 1 FROM packagereview pr 
                   WHERE pr.PackageID = p.PackageID AND pr.TravellerID = b.TravellerID
@@ -1645,7 +1655,7 @@ if (strpos($request_uri, '/api/booking/cancel') !== false) {
     $traveller_id = (int)$data['traveller_id'];
 
     try {
-        // Verify ownership and confirm the booking is actually still Pending
+        
         $stmt = $pdo->prepare("SELECT Status FROM booking WHERE BookingID = :bid AND TravellerID = :tid");
         $stmt->execute([':bid' => $booking_id, ':tid' => $traveller_id]);
         $booking = $stmt->fetch();
@@ -1662,7 +1672,7 @@ if (strpos($request_uri, '/api/booking/cancel') !== false) {
             exit();
         }
 
-        // Execute the cancellation status change
+        
         $updateStmt = $pdo->prepare("UPDATE booking SET Status = 'Cancelled' WHERE BookingID = :bid");
         $updateStmt->execute([':bid' => $booking_id]);
 
