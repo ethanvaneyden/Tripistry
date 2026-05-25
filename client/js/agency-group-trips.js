@@ -33,7 +33,7 @@ async function fetchGroupTrips() {
 
     if (!res.ok) {
       container.innerHTML = `<h2 class="section-title-left">Active Group Expeditions</h2>
-                             <p style="color:#e05555; padding:1rem;">${data.error || "Failed to load expeditions."}</p>`;
+                             <p class="text-error">${data.error || "Failed to load expeditions."}</p>`;
       return;
     }
 
@@ -41,9 +41,9 @@ async function fetchGroupTrips() {
     allGroupPackages = (data.packages || []).filter(p => parseInt(p.MaxParticipants) > 1);
     renderTrips(allGroupPackages);
 
-  } catch (err) {
+    } catch (err) {
     container.innerHTML = `<h2 class="section-title-left">Active Group Expeditions</h2>
-                           <p style="color:#e05555; padding:1rem;">Could not connect to server.</p>`;
+                           <p class="text-error">Could not connect to server.</p>`;
   }
 }
 
@@ -54,8 +54,8 @@ function renderTrips(packages) {
   // Re-render heading frame layout cleanly
   container.innerHTML = '<h2 class="section-title-left">Active Group Expeditions</h2>';
 
-  if (packages.length === 0) {
-    container.innerHTML += '<p style="color:rgba(255,255,255,0.45); padding: 1rem;">No active group expeditions matched your filter criteria.</p>';
+    if (packages.length === 0) {
+    container.innerHTML += '<p class="muted-padded">No active group expeditions matched your filter criteria.</p>';
     return;
   }
 
@@ -70,6 +70,8 @@ function renderTrips(packages) {
 
     const card = document.createElement("div");
     card.className = "group-trip-card";
+    const nearest10 = Math.min(100, Math.max(0, Math.round(percentFilled / 10) * 10));
+    const widthClass = `progress-fill--p${nearest10}`;
     card.innerHTML = `
         <div class="group-info">
           <h3>${pkg.Title} — ${dateFormatted}</h3>
@@ -82,7 +84,7 @@ function renderTrips(packages) {
             <span>${seatsFilled} / ${totalSpots}</span>
           </div>
           <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${percentFilled}%"></div>
+            <div class="progress-bar-fill ${widthClass}"></div>
           </div>
         </div>
 

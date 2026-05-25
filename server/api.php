@@ -3,12 +3,12 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
-//require_once 'config.php';
+require_once 'config.php';
 
-$db_host = "127.0.0.1";
-$db_user = "root";
-$db_pass = "Silver4monsters";
-$db_name = "tripistry";
+$db_host = DB_HOST;
+$db_user = DB_USER;
+$db_pass = DB_PASS;
+$db_name = DB_NAME;
 
 
 define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');

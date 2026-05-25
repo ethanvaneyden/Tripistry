@@ -59,9 +59,8 @@ async function deletePackage(packageId, cardEl) {
             return;
         }
 
-        cardEl.style.transition = 'opacity 0.3s';
-        cardEl.style.opacity    = '0';
-        setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
+        cardEl.classList.add('fade-out');
+            setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
 
     } catch (err) {
         alert('Could not connect to the server.');
@@ -125,7 +124,7 @@ function createCard(pkg) {
 async function fetchPackages() {
     packageSection.innerHTML = `
         <div class="no-results">
-            <i class="bi bi-arrow-repeat" style="font-size:2rem;color:var(--amber)"></i>
+            <i class="bi bi-arrow-repeat icon-2rem icon-amber"></i>
             <p>Loading your packages…</p>
         </div>`;
 
@@ -149,7 +148,7 @@ async function fetchPackages() {
         if (!data.packages || data.packages.length === 0) {
             packageSection.innerHTML = `
                 <div class="no-results">
-                    <i class="bi bi-inbox" style="font-size:2rem;color:var(--amber)"></i>
+                    <i class="bi bi-inbox icon-2rem icon-amber"></i>
                     <p>You haven't created any packages yet.
                        <a href="createpackage.html">Create one now</a>
                     </p>

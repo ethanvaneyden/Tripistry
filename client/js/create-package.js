@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadPackageDetails(editId, toggleFields);
   } else if (recoveredDraftId) {
     currentPackageId = recoveredDraftId;
-    document.querySelector('.concept-current').innerHTML = `<span style="color:#ffb400">Recovered Draft</span>`;
+    document.querySelector('.concept-current').innerHTML = `<span class="accent-text">Recovered Draft</span>`;
     await loadPackageDetails(recoveredDraftId, toggleFields);
   } else {
     toggleFields(); 
@@ -162,7 +162,7 @@ async function ensurePackageExists() {
         // Save to session storage so if they refresh, the script recovers it!
         sessionStorage.setItem("draftPackageId", currentPackageId);
         
-        document.querySelector('.concept-current').innerHTML = `<span style="color:#ffb400">Draft Package</span>`;
+        document.querySelector('.concept-current').innerHTML = `<span class="accent-text">Draft Package</span>`;
         return true;
     } catch (err) {
         showError('Could not connect to server.');
@@ -206,17 +206,17 @@ function closeModal() { modal.close(); }
 function renderLinkedChips() {
   const items = linked[activeType];
   if (items.length === 0) {
-    modalLinkedTitle.style.display = "none";
+    modalLinkedTitle.classList.add("hidden");
     modalLinked.innerHTML = "";
     return;
   }
-  modalLinkedTitle.style.display = "block";
+  modalLinkedTitle.classList.remove("hidden");
   modalLinked.innerHTML = items
     .map(
       (item) => `
-        <span style="display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,180,0,0.15); border:1px solid rgba(255,180,0,0.3); color:#ffb400; padding:0.2rem 0.6rem; border-radius:999px; font-size:0.75rem">
+        <span class="chip">
             ${item.label}
-            <button data-id="${item.id}" class="unlink-chip" style="background:none; border:none; color:#ffb400; cursor:pointer; font-size:0.9rem; padding:0; line-height:1">&times;</button>
+            <button data-id="${item.id}" class="unlink-chip">&times;</button>
         </span>`
     ).join("");
 
@@ -234,7 +234,7 @@ modalSearch.addEventListener("input", () => {
 });
 
 async function searchResources(query) {
-  modalResults.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">Searching…</p>';
+  modalResults.innerHTML = '<p class="modal-search">Searching…</p>';
   try {
     const res = await fetch(`${API_BASE}/api/resources/search`, {
       method: "POST",
@@ -244,32 +244,32 @@ async function searchResources(query) {
     const data = await res.json();
 
     if (!res.ok || !data.results) {
-      modalResults.innerHTML = `<p style="color:#e05555;font-size:0.85rem">${data.error || "Search failed."}</p>`;
+      modalResults.innerHTML = `<p class="modal-error">${data.error || "Search failed."}</p>`;
       return;
     }
     if (data.results.length === 0) {
-      modalResults.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">No results found.</p>';
+      modalResults.innerHTML = '<p class="modal-search">No results found.</p>';
       return;
     }
 
     modalResults.innerHTML = "";
     data.results.forEach((item) => {
       const alreadyLinked = linked[activeType].some((l) => l.id === item.id);
-      const row = document.createElement("div");
-      row.style.cssText = `display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); transition:background 0.15s`;
-      row.innerHTML = `
-                <div style="color:white; font-size:0.85rem">
-                    <div style="font-weight:600">${buildLabel(item)}</div>
-                    <div style="color:rgba(255,255,255,0.45); font-size:0.75rem">${buildSublabel(item)}</div>
-                </div>
-                <button style="padding:0.3rem 0.8rem; border-radius:6px; font-size:0.8rem; cursor:pointer; border:1px solid ${alreadyLinked ? "rgba(255,255,255,0.2)" : "rgba(255,180,0,0.5)"}; background:${alreadyLinked ? "rgba(255,255,255,0.05)" : "rgba(255,180,0,0.15)"}; color:${alreadyLinked ? "rgba(255,255,255,0.3)" : "#ffb400"}">
-                    ${alreadyLinked ? "Linked" : "+ Add"}
-                </button>`;
+        const row = document.createElement("div");
+        row.classList.add('result-row');
+          row.innerHTML = `
+              <div class="result-main">
+                <div class="result-title">${buildLabel(item)}</div>
+                <div class="result-sub">${buildSublabel(item)}</div>
+              </div>
+            <button class="btn-add ${alreadyLinked ? 'btn-add--linked' : 'btn-add--unlinked'}">
+              ${alreadyLinked ? "Linked" : "+ Add"}
+            </button>`;
       if (!alreadyLinked) row.querySelector("button").addEventListener("click", () => linkResource(item));
       modalResults.appendChild(row);
     });
   } catch (err) {
-    modalResults.innerHTML = '<p style="color:#e05555;font-size:0.85rem">Could not connect to server.</p>';
+    modalResults.innerHTML = '<p class="modal-error">Could not connect to server.</p>';
   }
 }
 
@@ -332,8 +332,7 @@ function updateResourceButton(type) {
   const p = btn.querySelector("p");
   const labels = { flight: "Flight", accommodation: "Accommodation", destination: "Destination", restaurant: "Restaurant" };
   p.textContent = count > 0 ? `${labels[type]} (${count})` : `Add ${labels[type]}`;
-  btn.style.borderColor = count > 0 ? "rgba(255,180,0,0.5)" : "";
-  btn.style.color = count > 0 ? "#ffb400" : "";
+  btn.classList.toggle('resource-btn-linked', count > 0);
 }
 
 // -----------------------------------------------------------------------
@@ -355,8 +354,7 @@ function showError(message, success = false) {
     publishBtn.parentNode.insertBefore(el, publishBtn);
   }
   el.className = "error-container error-visible";
-  el.style.background = success ? "rgba(0,180,100,0.15)" : "";
-  el.style.borderColor = success ? "rgba(0,200,100,0.4)" : "";
+  el.classList.toggle('success', success);
   el.innerHTML = `<i class="bi bi-${success ? "check-circle" : "exclamation-circle"}-fill"></i> <span>${message}</span>`;
   el.scrollIntoView({ behavior: "smooth", block: "center" });
 }

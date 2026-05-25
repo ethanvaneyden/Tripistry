@@ -82,7 +82,7 @@ function setFeedback(message, type) {
     if (!el) return;
     el.textContent  = message;
     el.className    = `booking-feedback ${type}`;  // 'success' | 'error' | ''
-    el.style.display = message ? 'block' : 'none';
+    el.classList.toggle('hidden', !message);
 }
 
 // -----------------------------------------------------------------------

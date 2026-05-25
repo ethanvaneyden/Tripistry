@@ -73,7 +73,7 @@ function populateUI() {
   tableBody.innerHTML = "";
 
   if (bookingsList.length === 0) {
-    tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:rgba(255,255,255,0.4)">No active manifest passenger entries recorded yet.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="4" class="text-center-muted">No active manifest passenger entries recorded yet.</td></tr>`;
     return;
   }
 

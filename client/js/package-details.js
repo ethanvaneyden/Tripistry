@@ -82,7 +82,7 @@ function renderFlights(flights) {
             <span class="sub-line">
                 <i class="bi bi-calendar3"></i> ${formatDate(f.DepartureDateTime)}
             </span>
-        </div>`).join('<hr style="border-color:rgba(255,255,255,0.1); margin:0.5rem 0">');
+        </div>`).join('<hr class="hr-muted">');
 
     card.innerHTML = `
         <h2 class="section-title"><i class="bi bi-airplane"></i> Flight Details</h2>
@@ -110,9 +110,9 @@ function renderAccommodations(accommodations) {
                 <i class="bi bi-map"></i>
                 ${[ac.Street, ac.City, ac.Country].filter(Boolean).join(', ')}
             </span>
-        </div>`).join('<hr style="border-color:rgba(255,255,255,0.1); margin:0.5rem 0">');
+        </div>`).join('<hr class="hr-muted">');
 
-    card.innerHTML = `
+        card.innerHTML = `
         <h2 class="section-title"><i class="bi bi-building-check"></i> Accommodation</h2>
         ${rows}`;
 }
@@ -120,7 +120,7 @@ function renderAccommodations(accommodations) {
 function renderAttractions(attractions) {
     const card = document.getElementById('attractions-card');
     if (!attractions || attractions.length === 0) {
-        card.style.display = 'none';
+        card.classList.add('hidden');
         return;
     }
 
@@ -134,7 +134,7 @@ function renderAttractions(attractions) {
                     ${at.OpeningHours && at.EntranceFee > 0 ? ' | ' : ''}
                     ${at.EntranceFee > 0 ? `Fee: ${formatPrice(at.EntranceFee)}` : (at.OpeningHours ? '' : 'Free entry')}
                 </small>
-                ${at.Description ? `<span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">${at.Description}</span>` : ''}
+                ${at.Description ? `<span class="muted small">${at.Description}</span>` : ''}
             </div>
         </div>`).join('');
 
@@ -146,7 +146,7 @@ function renderAttractions(attractions) {
 function renderRestaurants(restaurants) {
     const card = document.getElementById('restaurants-card');
     if (!restaurants || restaurants.length === 0) {
-        card.style.display = 'none';
+        card.classList.add('hidden');
         return;
     }
 
@@ -160,7 +160,7 @@ function renderRestaurants(restaurants) {
                     ${r.Cuisine && r.PriceRange ? ' | ' : ''}
                     ${r.PriceRange ? `Price Range: ${r.PriceRange}` : ''}
                 </small>
-                ${r.City ? `<span style="font-size:0.8rem;color:rgba(255,255,255,0.6)">
+                ${r.City ? `<span class="muted small">
                     <i class="bi bi-map"></i>
                     ${[r.Street, r.City, r.Country].filter(Boolean).join(', ')}
                 </span>` : ''}
@@ -178,18 +178,18 @@ function renderReviews(reviews, avgRating, reviewCount) {
     if (!reviews || reviews.length === 0) {
         card.innerHTML = `
             <h2 class="section-title"><i class="bi bi-chat-left-text"></i> Traveller Reviews</h2>
-            <p class="sub-line" style="color:rgba(255,255,255,0.6)">
+            <p class="sub-line muted">
                 No reviews yet. Be the first to review this package!
             </p>`;
         return;
     }
 
     const summary = avgRating > 0
-        ? `<div style="margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem">
-               <span style="font-size:2rem; font-weight:700; color:var(--amber)">${avgRating.toFixed(1)}</span>
+        ? `<div class="rating-summary">
+               <span class="big-rating">${avgRating.toFixed(1)}</span>
                <div>
-                   <div class="stars" style="font-size:1.1rem">${renderStarText(avgRating)}</div>
-                   <small style="color:rgba(255,255,255,0.6)">${reviewCount} review${reviewCount !== 1 ? 's' : ''}</small>
+                   <div class="stars stars-small">${renderStarText(avgRating)}</div>
+                   <small class="muted">${reviewCount} review${reviewCount !== 1 ? 's' : ''}</small>
                </div>
            </div>`
         : '';
@@ -201,7 +201,7 @@ function renderReviews(reviews, avgRating, reviewCount) {
                 <span class="stars">${renderStarText(rv.Rating)}</span>
             </div>
             <p>${rv.Comment || ''}</p>
-            <small style="color:rgba(255,255,255,0.4); font-size:0.75rem">
+            <small class="small-muted">
                 ${new Date(rv.CreatedAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
             </small>
         </div>`).join('');
@@ -251,10 +251,10 @@ function renderBookingWidget(pkg) {
 // -----------------------------------------------------------------------
 function showPageError(message) {
     document.querySelector('main').innerHTML = `
-        <div style="text-align:center; padding:6rem 2rem; color:white">
-            <i class="bi bi-exclamation-circle" style="font-size:3rem; color:#e05555"></i>
-            <h2 style="margin:1rem 0">${message}</h2>
-            <a href="browsepackages.html" class="btn-outline" style="display:inline-flex; margin-top:1rem">
+        <div class="page-error">
+            <i class="bi bi-exclamation-circle error-icon"></i>
+            <h2>${message}</h2>
+            <a href="browsepackages.html" class="btn-outline btn-inline">
                 <i class="bi bi-arrow-left"></i> Back to packages
             </a>
         </div>`;
@@ -319,8 +319,7 @@ async function checkAlreadyBooked(packageId, travellerId) {
             const btn = document.querySelector('.btn-reserve');
             btn.disabled   = true;
             btn.innerHTML  = `<i class="bi bi-check-circle-fill"></i> Already Booked`;
-            btn.style.opacity = '0.6';
-            btn.style.cursor  = 'not-allowed';
+            btn.classList.add('disabled');
         }
     } catch (_) {
         // silently ignore — non-critical

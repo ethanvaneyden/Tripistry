@@ -26,14 +26,49 @@ function formatPrice(price) {
 }
 
 function statusBadge(status) {
-    const colours = {
-        Pending: 'background:rgba(255,180,0,0.2);   color:#ffb400;  border:1px solid rgba(255,180,0,0.4)',
-        Confirmed: 'background:rgba(0,200,100,0.2);   color:#00c864;  border:1px solid rgba(0,200,100,0.4)',
-        Cancelled: 'background:rgba(220,50,50,0.2);   color:#e05555;  border:1px solid rgba(220,50,50,0.4)',
-        Completed: 'background:rgba(100,149,237,0.2); color:#6495ed;  border:1px solid rgba(100,149,237,0.4)',
-    };
-    const style = colours[status] || colours['Pending'];
-    return `<span style="padding:0.2rem 0.6rem; border-radius:999px; font-size:0.75rem; font-weight:600; ${style}">${status}</span>`;
+    const key = (status || 'Pending').toLowerCase();
+    return `<span class="status-badge badge-${key}">${status}</span>`;
+}
+
+// -----------------------------------------------------------------------
+// Confirmation Modal Helper
+// -----------------------------------------------------------------------
+function showConfirmation(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmationModal');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const yesBtn = document.getElementById('confirmYes');
+        const noBtn = document.getElementById('confirmNo');
+        const closeBtn = document.getElementById('confirmClose');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        const cleanup = () => {
+            yesBtn.removeEventListener('click', handleYes);
+            noBtn.removeEventListener('click', handleNo);
+            closeBtn.removeEventListener('click', handleNo);
+        };
+
+        const handleYes = () => {
+            cleanup();
+            modal.close();
+            resolve(true);
+        };
+
+        const handleNo = () => {
+            cleanup();
+            modal.close();
+            resolve(false);
+        };
+
+        yesBtn.addEventListener('click', handleYes);
+        noBtn.addEventListener('click', handleNo);
+        closeBtn.addEventListener('click', handleNo);
+
+        modal.showModal();
+    });
 }
 
 // -----------------------------------------------------------------------
@@ -65,22 +100,23 @@ function createCard(booking) {
                 </li>
                 <li class="card-price">${formatPrice(booking.BookingPrice)}</li>
                 <li class="card-agency">Offered by ${booking.AgencyName}</li>
+                 <li>
+                    <small class="booked-date">Booked: ${formatDate(booking.BookingDate)}</small>
+                </li>
                 <li>
                     ${statusBadge(booking.Status)}
-                    <small style="margin-left:0.5rem;color:rgba(255,255,255,0.5)">
-                        Booked: ${formatDate(booking.BookingDate)}
-                    </small>
                 </li>
+               
                 ${booking.NumberOfPeople > 1
             ? `<li><i class="bi bi-people"></i> ${booking.NumberOfPeople} people</li>`
             : ''}
             </ul>
-            <div style="display: flex; gap: 10px;">
-                <a href="packagedetails.html?id=${booking.PackageID}" class="btn-outline" style="flex: 1; text-align: center;">
+            <div class="action-row">
+                <a href="packagedetails.html?id=${booking.PackageID}" class="btn-outline btn-stretch">
                     View package <i class="bi bi-chevron-double-right"></i>
                 </a>
                 ${booking.Status === 'Pending'
-                    ? `<button class="btn-cancel-booking btn-outline" data-id="${booking.BookingID}" style="flex: 1; border-color: #e05555; color: #e05555;">
+                    ? `<button class="btn-cancel-booking btn-outline btn-cancel" data-id="${booking.BookingID}">
                            Cancel <i class="bi bi-x-circle"></i>
                        </button>`
                     : ''}
@@ -96,7 +132,7 @@ function createCard(booking) {
 async function fetchBookings() {
     packageSection.innerHTML = `
         <div class="no-results">
-            <i class="bi bi-arrow-repeat" style="font-size:2rem;color:var(--amber)"></i>
+            <i class="bi bi-arrow-repeat icon-2rem icon-amber"></i>
             <p>Loading your bookings…</p>
         </div>`;
 
@@ -118,7 +154,7 @@ async function fetchBookings() {
         if (!data.bookings || data.bookings.length === 0) {
             packageSection.innerHTML = `
                 <div class="no-results">
-                    <i class="bi bi-suitcase-lg" style="font-size:2rem;color:var(--amber)"></i>
+                    <i class="bi bi-suitcase-lg icon-2rem icon-amber"></i>
                     <p>You haven't booked any packages yet.
                     </p>
                     <a class="go-book" href="browsepackages.html">Browse packages</a>
@@ -143,7 +179,11 @@ fetchBookings();
 // -----------------------------------------------------------------------
 document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('btn-cancel-booking')) {
-        if (!confirm("Are you sure you want to cancel this pending booking?")) return;
+        const confirmed = await showConfirmation(
+            'Cancel Booking?',
+            'Are you sure you want to cancel this pending booking? This action cannot be undone.'
+        );
+        if (!confirmed) return;
 
         const bookingId = e.target.getAttribute('data-id');
         if (!bookingId) return;
@@ -166,7 +206,10 @@ document.addEventListener('click', async (e) => {
             const data = await res.json();
 
             if (!res.ok) {
-                alert(data.error || 'Failed to cancel booking.');
+                const confirmed = await showConfirmation(
+                    'Error',
+                    data.error || 'Failed to cancel booking.'
+                );
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
@@ -176,7 +219,10 @@ document.addEventListener('click', async (e) => {
             fetchBookings();
 
         } catch (err) {
-            alert('Error communicating with the server.');
+            const confirmed = await showConfirmation(
+                'Connection Error',
+                'Error communicating with the server.'
+            );
             btn.textContent = originalText;
             btn.disabled = false;
         }

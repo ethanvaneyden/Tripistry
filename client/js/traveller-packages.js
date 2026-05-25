@@ -125,7 +125,7 @@ function renderPackages(packages) {
     if (!packages || packages.length === 0) {
         packageSection.innerHTML = `
             <div class="no-results">
-                <i class="bi bi-search" style="font-size:2rem; color:var(--amber)"></i>
+                <i class="bi bi-search icon-2rem icon-amber"></i>
                 <p>No packages match your search. Try adjusting your filters.</p>
             </div>`;
         return;
@@ -137,7 +137,7 @@ function renderPackages(packages) {
 function showError(message) {
     packageSection.innerHTML = `
         <div class="no-results">
-            <i class="bi bi-exclamation-circle" style="font-size:2rem; color:#e05555"></i>
+            <i class="bi bi-exclamation-circle icon-2rem icon-error"></i>
             <p>${message}</p>
         </div>`;
 }
@@ -145,7 +145,7 @@ function showError(message) {
 function showLoading() {
     packageSection.innerHTML = `
         <div class="no-results">
-            <i class="bi bi-arrow-repeat" style="font-size:2rem; color:var(--amber)"></i>
+            <i class="bi bi-arrow-repeat icon-2rem icon-amber"></i>
             <p>Loading packages…</p>
         </div>`;
 }

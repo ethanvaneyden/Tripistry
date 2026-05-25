@@ -217,6 +217,10 @@
     -webkit-backdrop-filter: blur(12px);
 }
 
+/* Loading text used on review pages */
+.loading-text { padding: 20px; color: white; }
+.muted-padded { color: rgba(255,255,255,0.45); padding: 1rem; }
+
 .close-btn {
     background: none;
     border: none;

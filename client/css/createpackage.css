@@ -1,3 +1,21 @@
+/* Modal/result UI for linking resources */
+.chip { display:inline-flex; align-items:center; gap:0.3rem; background:rgba(255,180,0,0.15); border:1px solid rgba(255,180,0,0.3); color:var(--amber-bright); padding:0.2rem 0.6rem; border-radius:999px; font-size:0.75rem; }
+.unlink-chip { background:none; border:none; color:var(--amber-bright); cursor:pointer; font-size:0.9rem; padding:0; line-height:1; }
+.modal-search { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+.modal-error { color: var(--danger); font-size: 0.85rem; }
+.result-row { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); transition:background 0.15s; }
+.result-main { color:white; font-size:0.85rem; }
+.result-sub { color: rgba(255,255,255,0.45); font-size:0.75rem; }
+.result-title { font-weight: 600; }
+.btn-add { padding:0.3rem 0.8rem; border-radius:6px; font-size:0.8rem; cursor:pointer; border:1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+.btn-add--linked { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); }
+.btn-add--unlinked { border-color: rgba(255,180,0,0.5); background: rgba(255,180,0,0.15); color: var(--amber-bright); }
+.resource-btn-linked { border-color: rgba(255,180,0,0.5); color: var(--amber-bright); }
+.error-container { padding:0.6rem 0.8rem; border-radius:6px; margin:0.5rem 0; }
+.error-container.success { background: rgba(0,180,100,0.15); border:1px solid rgba(0,200,100,0.4); }
+.accent-text { color: var(--amber-bright); }
+.resource-btn-linked { border-color: rgba(255,180,0,0.5); color: var(--amber-bright); }
+.accent-text { color: var(--amber-bright); }
 .create-container {
     display: flex;
     flex-direction: column;
@@ -230,12 +248,12 @@
 
 .group-info input[type="checkbox"]:checked {
     background: rgba(255, 191, 0, 0.2);
-    border-color: var(--amber, #ffbf00);
+    border-color: var(--amber-bright);
 }
 
 .group-info input[type="checkbox"]:checked::before {
     transform: translateX(22px);
-    background: var(--amber, #ffbf00);
+    background: var(--amber-bright);
     box-shadow: 0 0 8px rgba(255, 191, 0, 0.4);
 }
 
