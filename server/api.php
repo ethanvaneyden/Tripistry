@@ -915,6 +915,10 @@ if (strpos($request_uri, '/api/agency/packages/draft') !== false) {
 // Body: { traveller_id, package_id, number_of_people }
 // Requires: traveller session (validated client-side via sessionStorage)
 // -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// CREATE BOOKING
+// POST /api/booking/create
+// -----------------------------------------------------------------------
 if (strpos($request_uri, '/api/booking/create') !== false) {
 
     if (
@@ -938,18 +942,10 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
     }
 
     try {
-        // Fetch package price and availability
-        $stmt = $pdo->prepare("
-            SELECT p.TotalPrice, p.MaxParticipants,
-                   COALESCE(SUM(b.NumberOfPeople), 0) AS AlreadyBooked
-            FROM package p
-            LEFT JOIN booking b ON p.PackageID = b.PackageID
-                               AND b.Status NOT IN ('Cancelled')
-            WHERE p.PackageID = :pid
-            GROUP BY p.PackageID, p.TotalPrice, p.MaxParticipants
-        ");
-        $stmt->execute([':pid' => $package_id]);
-        $pkg = $stmt->fetch();
+        // 1. Fetch the absolute live package details directly from the core row
+        $stmtPkg = $pdo->prepare("SELECT TotalPrice, MaxParticipants FROM package WHERE PackageID = :pid");
+        $stmtPkg->execute([':pid' => $package_id]);
+        $pkg = $stmtPkg->fetch();
 
         if (!$pkg) {
             http_response_code(404);
@@ -957,19 +953,42 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
             exit();
         }
 
-        // Check capacity
-        $spots_left = (int)$pkg['MaxParticipants'] - (int)$pkg['AlreadyBooked'];
-        if ($number_of_people > $spots_left) {
+        // 2. Sum up ALL seats claimed across active bookings for this specific package
+        $stmtCount = $pdo->prepare("
+            SELECT COALESCE(SUM(NumberOfPeople), 0) AS TotalSeatsClaimed 
+            FROM booking 
+            WHERE PackageID = :pid AND Status NOT IN ('Cancelled')
+        ");
+        $stmtCount->execute([':pid' => $package_id]);
+        $bookingData = $stmtCount->fetch();
+        
+        $totalSeatsClaimed = (int)$bookingData['TotalSeatsClaimed'];
+        $maxCapacity = (int)$pkg['MaxParticipants'];
+
+        // 3. FIX: If it's a solo package (MaxParticipants was set to 1 or 0 by default), 
+        // bypass the aggregate blocking cap so unlimited individual travelers can buy it!
+        if ($maxCapacity <= 1) {
+            // Solo trip flow: Capacity check is skipped because each departure accommodates infinite separate solo sign-ups
+            $spots_left = 999; 
+        } else {
+            // Group trip flow: Strictly enforce your live edited database capacity limits
+            $spots_left = $maxCapacity - $totalSeatsClaimed;
+        }
+
+        // Validate incoming seat request against computed remaining capacity
+        if ($maxCapacity > 1 && $number_of_people > $spots_left) {
             http_response_code(409);
             echo json_encode([
-                "error"      => "Not enough spots available.",
-                "spots_left" => $spots_left
+                "error"      => "Not enough spots available on this expedition.",
+                "spots_left" => Math.max(0, $spots_left)
             ]);
             exit();
         }
 
+        // Calculate checkout total price
         $total_price = (float)$pkg['TotalPrice'] * $number_of_people;
 
+        // Insert new active booking row safely
         $stmt = $pdo->prepare("
             INSERT INTO booking (TravellerID, PackageID, NumberOfPeople, Status, TotalPrice)
             VALUES (:tid, :pid, :people, 'Pending', :price)
@@ -985,15 +1004,15 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
 
         http_response_code(201);
         echo json_encode([
-            "message"    => "Booking created successfully!",
-            "booking_id" => $booking_id,
+            "message"     => "Booking created successfully!",
+            "booking_id"  => $booking_id,
             "total_price" => $total_price,
-            "status"     => "Pending"
+            "status"      => "Pending"
         ]);
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Booking failed: " . $e->getMessage()]);
+        echo json_encode(["error" => "Booking processing failed: " . $e->getMessage()]);
     }
 
     exit();
@@ -1323,6 +1342,21 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $restaurants = $stmt->fetchAll();
 
         
+        
+        $stmt = $pdo->prepare("
+            SELECT 
+                b.BookingID,
+                CONCAT(t.FirstName, ' ', t.Surname) AS PassengerName,
+                b.NumberOfPeople AS SeatsClaimed,
+                b.Status AS FinancialStatus
+            FROM booking b
+            JOIN traveller t ON b.TravellerID = t.TravellerID
+            WHERE b.PackageID = :pid AND b.Status NOT IN ('Cancelled')
+            ORDER BY b.Date DESC
+        ");
+        $stmt->execute([':pid' => $package_id]);
+        $passenger_bookings = $stmt->fetchAll();
+
         $stmt = $pdo->prepare("
             SELECT
                 rv.ReviewID,
@@ -1376,6 +1410,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 "Attractions"    => $attractions,
                 "Restaurants"    => $restaurants,
                 "Reviews"        => $reviews,
+                "BookingsList"   => $passenger_bookings
             ]
         ]);
 
