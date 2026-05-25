@@ -10,6 +10,22 @@ $db_user = DB_USER;
 $db_pass = DB_PASS;
 $db_name = DB_NAME;
 
+
+define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
+
+function write_log(string $level, string $event, array $context = []): void {
+    $dir = dirname(LOG_FILE);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0750, true);
+    }
+    $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $uri     = $_SERVER['REQUEST_URI']  ?? '';
+    $ts      = date('Y-m-d H:i:s');
+    $ctx     = empty($context) ? '' : ' ' . json_encode($context);
+    $line    = "[$ts] [$level] [$ip] $event$ctx URI=$uri" . PHP_EOL;
+    file_put_contents(LOG_FILE, $line, FILE_APPEND | LOCK_EX);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 
     exit;
@@ -21,9 +37,65 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 } catch (PDOException $e) {
+    // Log the real error internally; never expose DB internals to the client
+    write_log('ERROR', 'DB_CONNECTION_FAILED', ['msg' => $e->getMessage()]);
     http_response_code(500);
-    echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
+    echo json_encode(["error" => "A server error occurred. Please try again later."]);
     exit();
+}
+
+
+define('LOGIN_MAX_ATTEMPTS',    5);
+define('LOGIN_WINDOW_SECONDS',  600);   
+define('LOGIN_LOCKOUT_SECONDS', 900);   
+
+
+$pdo->exec("
+    CREATE TABLE IF NOT EXISTS login_attempts (
+        id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        ip_address   VARCHAR(45)  NOT NULL,
+        attempted_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_ip_time (ip_address, attempted_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+");
+
+function get_client_ip(): string {
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+
+function check_rate_limit(PDO $pdo): void {
+    $ip      = get_client_ip();
+    $window  = date('Y-m-d H:i:s', time() - LOGIN_WINDOW_SECONDS);
+
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS attempts
+        FROM login_attempts
+        WHERE ip_address = :ip AND attempted_at >= :window
+    ");
+    $stmt->execute([':ip' => $ip, ':window' => $window]);
+    $row = $stmt->fetch();
+
+    if ((int)$row['attempts'] >= LOGIN_MAX_ATTEMPTS) {
+        write_log('WARN', 'RATE_LIMIT_BLOCKED', ['ip' => $ip, 'attempts' => $row['attempts']]);
+        http_response_code(429);
+        echo json_encode([
+            "error" => "Too many failed login attempts. Please wait 15 minutes before trying again."
+        ]);
+        exit();
+    }
+}
+
+function record_failed_attempt(PDO $pdo): void {
+    $ip = get_client_ip();
+    $pdo->prepare("INSERT INTO login_attempts (ip_address) VALUES (:ip)")
+        ->execute([':ip' => $ip]);
+}
+
+function clear_attempts(PDO $pdo): void {
+   
+    $ip = get_client_ip();
+    $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = :ip")
+        ->execute([':ip' => $ip]);
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -66,12 +138,13 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
             ':name'        => $data['name'],
             ':surname'     => $data['surname'],
             ':email'       => $data['email'],
-            ':password'    => password_hash($data['password'], PASSWORD_DEFAULT),
+            ':password'    => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'       => $data['phone'],
             ':nationality' => $data['nationality'],
             ':dob'         => $data['dateofbirth']
         ]);
 
+        write_log('INFO', 'TRAVELLER_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Traveller registered successfully!"]);
 
@@ -82,7 +155,8 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
         if ($e->getCode() == 23000) {
             echo json_encode(["error" => "Email is already registered as a traveller."]);
         } else {
-            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+            write_log('ERROR', 'REGISTRATION_FAILED', ['msg' => $e->getMessage()]);
+            echo json_encode(['error' => 'A server error occurred. Please try again.']);
         }
     }
 
@@ -117,13 +191,14 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         $stmt->execute([
             ':name'     => $data['name'],
             ':email'    => $data['email'],
-            ':password' => password_hash($data['password'], PASSWORD_DEFAULT),
+            ':password' => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'    => $data['phone'],
             ':street'   => $data['street'],
             ':city'     => $data['city'],
             ':country'  => $data['country']
         ]);
 
+        write_log('INFO', 'AGENCY_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Agency registered successfully!"]);
 
@@ -134,7 +209,8 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         if ($e->getCode() == 23000) {
             echo json_encode(["error" => "Email is already registered as an agency."]);
         } else {
-            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+            write_log('ERROR', 'REGISTRATION_FAILED', ['msg' => $e->getMessage()]);
+            echo json_encode(['error' => 'A server error occurred. Please try again.']);
         }
     }
 
@@ -149,7 +225,9 @@ if (strpos($request_uri, '/api/login') !== false) {
         exit();
     }
 
-    $email = $data['email'];
+    check_rate_limit($pdo);
+
+    $email    = $data['email'];
     $password = $data['password'];
 
     $stmt = $pdo->prepare("
@@ -157,24 +235,29 @@ if (strpos($request_uri, '/api/login') !== false) {
         FROM traveller 
         WHERE Email = :email
     ");
-
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['Password'])) {
+        clear_attempts($pdo);
+        write_log('INFO', 'LOGIN_SUCCESS', ['email' => $email, 'role' => 'traveller']);
+
+        if (password_needs_rehash($user['Password'], PASSWORD_BCRYPT, ['cost' => 12])) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $pdo->prepare("UPDATE traveller SET Password = :h WHERE TravellerID = :id")
+                ->execute([':h' => $newHash, ':id' => $user['TravellerID']]);
+        }
 
         http_response_code(200);
-
         echo json_encode([
             "message" => "Login successful!",
             "user" => [
-                "id"   => (int)$user['TravellerID'],
-                "name" => $user['Name'],
+                "id"    => (int)$user['TravellerID'],
+                "name"  => $user['Name'],
                 "email" => $user['Email'],
-                "role" => "traveller"
+                "role"  => "traveller"
             ]
         ]);
-
         exit();
     }
 
@@ -183,14 +266,20 @@ if (strpos($request_uri, '/api/login') !== false) {
         FROM agency 
         WHERE Email = :email
     ");
-
     $stmt->execute([':email' => $email]);
     $agency = $stmt->fetch();
 
     if ($agency && password_verify($password, $agency['Password'])) {
+        clear_attempts($pdo);
+        write_log('INFO', 'LOGIN_SUCCESS', ['email' => $email, 'role' => 'agency']);
+
+        if (password_needs_rehash($agency['Password'], PASSWORD_BCRYPT, ['cost' => 12])) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $pdo->prepare("UPDATE agency SET Password = :h WHERE AgencyID = :id")
+                ->execute([':h' => $newHash, ':id' => $agency['AgencyID']]);
+        }
 
         http_response_code(200);
-
         echo json_encode([
             "message" => "Login successful!",
             "user" => [
@@ -200,20 +289,19 @@ if (strpos($request_uri, '/api/login') !== false) {
                 "role"  => "agency"
             ]
         ]);
-
         exit();
     }
+
+  
+    record_failed_attempt($pdo);
+    write_log('WARN', 'LOGIN_FAILED', ['email' => $email]);
 
     http_response_code(401);
     echo json_encode(["error" => "Invalid email or password."]);
     exit();
 }
 
-// -----------------------------------------------------------------------
-// SEARCH RESOURCES (flights, accommodations, destinations, restaurants)
-// POST /api/resources/search
-// Body: { type: 'flight'|'accommodation'|'destination'|'restaurant', query? }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/search') !== false) {
 
     $type  = isset($data['type'])  ? trim($data['type'])  : '';
@@ -289,17 +377,14 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Search failed: " . $e->getMessage()]);
+        write_log('ERROR', 'SEARCH_FAILED', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// LINK RESOURCE TO PACKAGE
-// POST /api/resources/link
-// Body: { agency_id, package_id, type, resource_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/link') !== false &&
     strpos($request_uri, '/api/resources/unlink') === false) {
 
@@ -349,17 +434,14 @@ if (strpos($request_uri, '/api/resources/link') !== false &&
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to link: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_LINK', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// UNLINK RESOURCE FROM PACKAGE
-// POST /api/resources/unlink
-// Body: { agency_id, package_id, type, resource_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
     foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
@@ -408,17 +490,14 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to unlink: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_UNLINK', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET AGENCY'S OWN PACKAGES
-// POST /api/agency/packages
-// Body: { agency_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/create') === false &&
     strpos($request_uri, '/api/agency/packages/delete') === false &&
     strpos($request_uri, '/api/agency/packages') !== false) {
@@ -483,17 +562,14 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch agency packages: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_AGENCY_PACKAGES', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// CREATE PACKAGE
-// POST /api/agency/packages/create
-// Body: { agency_id, title, description, start_date, end_date, max_participants, total_price }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/create') !== false) {
 
     $required = ['agency_id', 'title', 'description', 'start_date', 'end_date', 'max_participants', 'total_price'];
@@ -528,17 +604,14 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to create package: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_CREATE_PACKAGE', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// DELETE PACKAGE
-// POST /api/agency/packages/delete
-// Body: { agency_id, package_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
     if (empty($data['agency_id']) || empty($data['package_id'])) {
@@ -575,17 +648,14 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to delete package: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_DELETE_PACKAGE', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET TRAVELLER'S BOOKINGS
-// POST /api/traveller/bookings
-// Body: { traveller_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
     if (empty($data['traveller_id']) || !is_numeric($data['traveller_id'])) {
@@ -634,28 +704,25 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch bookings: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_BOOKINGS', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET PACKAGES (browse / filter / sort)
-// POST /api/packages
-// Body: { search?, price?, rating?, duration?, sort? }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/packages/details') === false &&
     strpos($request_uri, '/api/packages') !== false) {
 
-    // --- Sanitise / read filter params ---
+    
     $search   = isset($data['search'])   ? trim($data['search'])   : '';
     $price    = isset($data['price'])    ? trim($data['price'])    : '';
     $rating   = isset($data['rating'])   ? (int)$data['rating']    : 0;
     $duration = isset($data['duration']) ? trim($data['duration']) : '';
     $sort     = isset($data['sort'])     ? trim($data['sort'])     : 'recommended';
 
-    // --- Build WHERE clauses using a whitelist approach ---
+    
     $conditions = [];
     $params     = [];
 
@@ -664,7 +731,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         $params[':search'] = '%' . $search . '%';
     }
 
-    // Price filter: "0-5000", "5000-15000", "15000+"
+   
     if ($price !== '') {
         if ($price === '0-5000') {
             $conditions[] = "p.TotalPrice < 5000";
@@ -675,13 +742,13 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         }
     }
 
-    // Rating filter: minimum average package review rating
+  
     if ($rating > 0) {
         $conditions[] = "COALESCE(AVG_RATING.avg_rating, 0) >= :rating";
         $params[':rating'] = $rating;
     }
 
-    // Duration filter in nights: "1-3", "4-7", "8-14", "15+"
+   
     if ($duration !== '') {
         if ($duration === '1-3') {
             $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 1 AND 3";
@@ -698,7 +765,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         ? 'WHERE ' . implode(' AND ', $conditions)
         : '';
 
-    // --- Sort order whitelist ---
+  
     $order_map = [
         'recommended' => 'COALESCE(AVG_RATING.avg_rating, 0) DESC',
         'price-low'   => 'p.TotalPrice ASC',
@@ -758,17 +825,14 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         echo json_encode(["packages" => $packages]);
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch packages: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_PACKAGES', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET SINGLE PACKAGE DETAILS
-// POST /api/packages/details
-// Body: { package_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/packages/details') !== false) {
 
     if (empty($data['package_id']) || !is_numeric($data['package_id'])) {
@@ -780,7 +844,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
     $package_id = (int)$data['package_id'];
 
     try {
-        // --- Core package + agency ---
+       
         $stmt = $pdo->prepare("
             SELECT
                 p.PackageID,
@@ -810,14 +874,14 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
             exit();
         }
 
-        // --- Images ---
+        
         $stmt = $pdo->prepare("
             SELECT ImageURL FROM packageimage WHERE PackageID = :pid
         ");
         $stmt->execute([':pid' => $package_id]);
         $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        // --- Destinations ---
+        
         $stmt = $pdo->prepare("
             SELECT d.DestinationID, d.Name, d.City, d.Region, d.Country, d.Description
             FROM destination d
@@ -827,7 +891,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $destinations = $stmt->fetchAll();
 
-        // --- Flights (with airport codes) ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 f.FlightID,
@@ -850,7 +914,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $flights = $stmt->fetchAll();
 
-        // --- Accommodations ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 ac.AccommodationID,
@@ -874,7 +938,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $accommodations = $stmt->fetchAll();
 
-        // --- Attractions ---
+       
         $stmt = $pdo->prepare("
             SELECT
                 at.AttractionID,
@@ -892,7 +956,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $attractions = $stmt->fetchAll();
 
-        // --- Restaurants ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 r.RestaurantID,
@@ -910,7 +974,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $restaurants = $stmt->fetchAll();
 
-        // --- Reviews (with traveller first name) ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 rv.ReviewID,
@@ -926,7 +990,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $reviews = $stmt->fetchAll();
 
-        // --- Average rating ---
+        
         $avg_rating    = 0;
         $review_count  = count($reviews);
         if ($review_count > 0) {
@@ -969,7 +1033,8 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch package details: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_PACKAGE_DETAILS', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
