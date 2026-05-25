@@ -224,7 +224,7 @@ function renderBookingWidget(pkg) {
         ${pkg.Agency.Phone
             ? `<li><i class="bi bi-telephone"></i> ${pkg.Agency.Phone}</li>`
             : ''}
-        ${pkg.MaxParticipants
+        ${parseInt(pkg.MaxParticipants) > 1
             ? `<li><i class="bi bi-people"></i> Max ${pkg.MaxParticipants} participants</li>`
             : ''}`;
 

@@ -61,7 +61,7 @@ function renderTrips(packages) {
 
   packages.forEach(pkg => {
     const totalSpots = parseInt(pkg.MaxParticipants || 1);
-    const seatsFilled = parseInt(pkg.BookingCount || 0);
+    const seatsFilled = parseInt(pkg.SeatsFilled || 0);
     const percentFilled = Math.min(Math.round((seatsFilled / totalSpots) * 100), 100);
     
     // Parse the date display cleanly
@@ -98,7 +98,7 @@ function filterTrips() {
 
   const filtered = allGroupPackages.filter(pkg => {
     const matchesId = `grp-${pkg.PackageID}`.includes(query) || pkg.PackageID.toString().includes(query) || pkg.Title.toLowerCase().includes(query);
-    const seatsFilled = parseInt(pkg.BookingCount || 0);
+    const seatsFilled = parseInt(pkg.SeatsFilled || 0);
     const totalSpots = parseInt(pkg.MaxParticipants || 1);
     
     let matchesStatus = true;

@@ -3,12 +3,12 @@ header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
-//require_once 'config.php';
+require_once 'config.php';
 
-$db_host = "127.0.0.1";
-$db_user = "root";
-$db_pass = "Silver4monsters";
-$db_name = "tripistry";
+$db_host = DB_HOST;
+$db_user = DB_USER;
+$db_pass = DB_PASS;
+$db_name = DB_NAME;
 
 
 define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
@@ -532,7 +532,8 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
                 MIN(d.Country)                         AS Country,
                 ROUND(COALESCE(AVG_R.avg_rating, 0), 1) AS AvgRating,
                 COALESCE(AVG_R.review_count, 0)        AS ReviewCount,
-                COALESCE(BK.booking_count, 0)          AS BookingCount
+                COALESCE(BK.booking_count, 0)          AS BookingCount,
+                COALESCE(BK.seats_filled, 0)           AS SeatsFilled
             FROM package p
             LEFT JOIN packageimage pi ON p.PackageID = pi.PackageID
             LEFT JOIN packagedestination pd ON p.PackageID = pd.PackageID
@@ -542,14 +543,18 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
                 FROM packagereview GROUP BY PackageID
             ) AS AVG_R ON p.PackageID = AVG_R.PackageID
             LEFT JOIN (
-                SELECT PackageID, COUNT(*) AS booking_count
-                FROM booking GROUP BY PackageID
+                SELECT PackageID, 
+                       COUNT(*) AS booking_count,
+                       SUM(NumberOfPeople) AS seats_filled
+                FROM booking 
+                WHERE Status != 'Cancelled'
+                GROUP BY PackageID
             ) AS BK ON p.PackageID = BK.PackageID
             WHERE p.AgencyID = :agency_id AND p.Title != 'Draft Package'
             GROUP BY
                 p.PackageID, p.Title, p.Description, p.StartDate, p.EndDate,
                 p.MaxParticipants, p.TotalPrice,
-                AVG_R.avg_rating, AVG_R.review_count, BK.booking_count
+                AVG_R.avg_rating, AVG_R.review_count, BK.booking_count, BK.seats_filled
             ORDER BY p.StartDate ASC
         ");
         $stmt->execute([':agency_id' => $agency_id]);
@@ -1621,6 +1626,54 @@ if (strpos($request_uri, '/api/review/agency') !== false) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to fetch agency reviews: " . $e->getMessage()]);
     }
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// CANCEL PENDING BOOKING (TRAVELLER)
+// POST /api/booking/cancel
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/booking/cancel') !== false) {
+
+    if (empty($data['booking_id']) || empty($data['traveller_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "booking_id and traveller_id are required."]);
+        exit();
+    }
+
+    $booking_id   = (int)$data['booking_id'];
+    $traveller_id = (int)$data['traveller_id'];
+
+    try {
+        // Verify ownership and confirm the booking is actually still Pending
+        $stmt = $pdo->prepare("SELECT Status FROM booking WHERE BookingID = :bid AND TravellerID = :tid");
+        $stmt->execute([':bid' => $booking_id, ':tid' => $traveller_id]);
+        $booking = $stmt->fetch();
+
+        if (!$booking) {
+            http_response_code(404);
+            echo json_encode(["error" => "Booking record not found."]);
+            exit();
+        }
+
+        if ($booking['Status'] !== 'Pending') {
+            http_response_code(400);
+            echo json_encode(["error" => "Only pending bookings can be cancelled."]);
+            exit();
+        }
+
+        // Execute the cancellation status change
+        $updateStmt = $pdo->prepare("UPDATE booking SET Status = 'Cancelled' WHERE BookingID = :bid");
+        $updateStmt->execute([':bid' => $booking_id]);
+
+        http_response_code(200);
+        echo json_encode(["message" => "Booking cancelled successfully."]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Cancellation failed: " . $e->getMessage()]);
+    }
+
     exit();
 }
 
