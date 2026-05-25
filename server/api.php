@@ -7,7 +7,7 @@ header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
 $db_host = "127.0.0.1";
 $db_user = "root";
 $db_pass = "Silver4monsters";
-$db_name = "triptest";
+$db_name = "tripistry";
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200); 
@@ -582,6 +582,261 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
 // -----------------------------------------------------------------------
 // GET TRAVELLER'S BOOKINGS
+// -----------------------------------------------------------------------
+// CHECK IF TRAVELLER ALREADY BOOKED A PACKAGE
+// POST /api/booking/check
+// Body: { traveller_id, package_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/booking/check') !== false) {
+
+    if (empty($data['traveller_id']) || !is_numeric($data['traveller_id']) ||
+        empty($data['package_id'])   || !is_numeric($data['package_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "traveller_id and package_id are required."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            SELECT BookingID FROM booking
+            WHERE TravellerID = :tid AND PackageID = :pid
+              AND Status NOT IN ('Cancelled')
+            LIMIT 1
+        ");
+        $stmt->execute([
+            ':tid' => (int)$data['traveller_id'],
+            ':pid' => (int)$data['package_id']
+        ]);
+        $booking = $stmt->fetch();
+
+        http_response_code(200);
+        echo json_encode([
+            "already_booked" => (bool)$booking,
+            "booking_id"     => $booking ? (int)$booking['BookingID'] : null
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Check failed: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// CREATE FLIGHT AND LINK TO PACKAGE
+// POST /api/flight/create
+// Body: { agency_id, package_id, airline, flight_number, departure_datetime,
+//         arrival_datetime, base_cost, origin_airport_id, destination_airport_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/flight/create') !== false) {
+
+    $required = ['agency_id','package_id','airline','flight_number',
+                 'departure_datetime','arrival_datetime','base_cost',
+                 'origin_airport_id','destination_airport_id'];
+    foreach ($required as $field) {
+        if (empty($data[$field])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Field '$field' is required."]);
+            exit();
+        }
+    }
+
+    $agency_id  = (int)$data['agency_id'];
+    $package_id = (int)$data['package_id'];
+
+    try {
+        // Verify package belongs to agency
+        $stmt = $pdo->prepare("SELECT AgencyID FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => $package_id]);
+        $pkg  = $stmt->fetch();
+        if (!$pkg || (int)$pkg['AgencyID'] !== $agency_id) {
+            http_response_code(403);
+            echo json_encode(["error" => "Package not found or access denied."]);
+            exit();
+        }
+
+        // Insert flight
+        $stmt = $pdo->prepare("
+            INSERT INTO flight
+                (FlightNumber, Airline, DepartureDateTime, ArrivalDateTime,
+                 BaseCost, OriginAirportID, DestinationAirportID)
+            VALUES
+                (:fn, :airline, :dep, :arr, :cost, :orig, :dest)
+        ");
+        $stmt->execute([
+            ':fn'     => trim($data['flight_number']),
+            ':airline'=> trim($data['airline']),
+            ':dep'    => $data['departure_datetime'],
+            ':arr'    => $data['arrival_datetime'],
+            ':cost'   => (float)$data['base_cost'],
+            ':orig'   => (int)$data['origin_airport_id'],
+            ':dest'   => (int)$data['destination_airport_id'],
+        ]);
+        $flight_id = (int)$pdo->lastInsertId();
+
+        // Link to package
+        $stmt = $pdo->prepare("INSERT IGNORE INTO packageflight (PackageID, FlightID) VALUES (:pid, :fid)");
+        $stmt->execute([':pid' => $package_id, ':fid' => $flight_id]);
+
+        http_response_code(201);
+        echo json_encode(["message" => "Flight created and linked.", "flight_id" => $flight_id]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create flight: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// SEARCH AIRPORTS
+// POST /api/airports/search
+// Body: { query }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/airports/search') !== false) {
+
+    $query = isset($data['query']) ? trim($data['query']) : '';
+    $like  = '%' . $query . '%';
+
+    try {
+        $stmt = $pdo->prepare("
+            SELECT AirportID AS id, Code, Name, City, Country
+            FROM airport
+            WHERE Code LIKE :q1 OR Name LIKE :q2 OR City LIKE :q3
+            LIMIT 20
+        ");
+        $stmt->execute([':q1' => $like, ':q2' => $like, ':q3' => $like]);
+        http_response_code(200);
+        echo json_encode(["results" => $stmt->fetchAll()]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Airport search failed: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// CREATE DRAFT PACKAGE (for resource linking before publish)
+// POST /api/agency/packages/draft
+// Body: { agency_id }
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/agency/packages/draft') !== false) {
+
+    if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "agency_id is required."]);
+        exit();
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO package (AgencyID, Title, Description, StartDate, EndDate, MaxParticipants, TotalPrice)
+            VALUES (:aid, 'Draft', '', CURDATE(), CURDATE(), 1, 0)
+        ");
+        $stmt->execute([':aid' => (int)$data['agency_id']]);
+        http_response_code(201);
+        echo json_encode(["package_id" => (int)$pdo->lastInsertId()]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Failed to create draft: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+// -----------------------------------------------------------------------
+// CREATE BOOKING
+// POST /api/booking/create
+// Body: { traveller_id, package_id, number_of_people }
+// Requires: traveller session (validated client-side via sessionStorage)
+// -----------------------------------------------------------------------
+if (strpos($request_uri, '/api/booking/create') !== false) {
+
+    if (
+        empty($data['traveller_id']) || !is_numeric($data['traveller_id']) ||
+        empty($data['package_id'])   || !is_numeric($data['package_id'])   ||
+        empty($data['number_of_people']) || !is_numeric($data['number_of_people'])
+    ) {
+        http_response_code(400);
+        echo json_encode(["error" => "traveller_id, package_id and number_of_people are required."]);
+        exit();
+    }
+
+    $traveller_id     = (int)$data['traveller_id'];
+    $package_id       = (int)$data['package_id'];
+    $number_of_people = (int)$data['number_of_people'];
+
+    if ($number_of_people < 1) {
+        http_response_code(400);
+        echo json_encode(["error" => "number_of_people must be at least 1."]);
+        exit();
+    }
+
+    try {
+        // Fetch package price and availability
+        $stmt = $pdo->prepare("
+            SELECT p.TotalPrice, p.MaxParticipants,
+                   COALESCE(SUM(b.NumberOfPeople), 0) AS AlreadyBooked
+            FROM package p
+            LEFT JOIN booking b ON p.PackageID = b.PackageID
+                               AND b.Status NOT IN ('Cancelled')
+            WHERE p.PackageID = :pid
+            GROUP BY p.PackageID, p.TotalPrice, p.MaxParticipants
+        ");
+        $stmt->execute([':pid' => $package_id]);
+        $pkg = $stmt->fetch();
+
+        if (!$pkg) {
+            http_response_code(404);
+            echo json_encode(["error" => "Package not found."]);
+            exit();
+        }
+
+        // Check capacity
+        $spots_left = (int)$pkg['MaxParticipants'] - (int)$pkg['AlreadyBooked'];
+        if ($number_of_people > $spots_left) {
+            http_response_code(409);
+            echo json_encode([
+                "error"      => "Not enough spots available.",
+                "spots_left" => $spots_left
+            ]);
+            exit();
+        }
+
+        $total_price = (float)$pkg['TotalPrice'] * $number_of_people;
+
+        $stmt = $pdo->prepare("
+            INSERT INTO booking (TravellerID, PackageID, NumberOfPeople, Status, TotalPrice)
+            VALUES (:tid, :pid, :people, 'Pending', :price)
+        ");
+        $stmt->execute([
+            ':tid'    => $traveller_id,
+            ':pid'    => $package_id,
+            ':people' => $number_of_people,
+            ':price'  => $total_price
+        ]);
+
+        $booking_id = (int)$pdo->lastInsertId();
+
+        http_response_code(201);
+        echo json_encode([
+            "message"    => "Booking created successfully!",
+            "booking_id" => $booking_id,
+            "total_price" => $total_price,
+            "status"     => "Pending"
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Booking failed: " . $e->getMessage()]);
+    }
+
+    exit();
+}
+
 // POST /api/traveller/bookings
 // Body: { traveller_id }
 // -----------------------------------------------------------------------
