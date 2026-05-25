@@ -37,7 +37,9 @@
           </div>
 
           <div class="info-card clear-glass">
-            <h2 class="section-title"><i class="bi bi-info-circle"></i> About This Getaway</h2>
+            <h2 class="section-title">
+              <i class="bi bi-info-circle"></i> About This Getaway
+            </h2>
             <p class="card-description">
               A beautiful getaway featuring coastal sights, wine tasting, and
               premium dining.
@@ -46,7 +48,9 @@
 
           <div class="split-grid">
             <div class="info-card clear-glass">
-              <h2 class="section-title"><i class="bi bi-airplane"></i> Flight Details</h2>
+              <h2 class="section-title">
+                <i class="bi bi-airplane"></i> Flight Details
+              </h2>
               <div class="data-row">
                 <span class="main-line"
                   >FlySafair <small class="flight-number">(FA201)</small></span
@@ -59,7 +63,9 @@
             </div>
 
             <div class="info-card clear-glass">
-              <h2 class="section-title"><i class="bi bi-building-check"></i> Accommodation</h2>
+              <h2 class="section-title">
+                <i class="bi bi-building-check"></i> Accommodation
+              </h2>
               <div class="data-row">
                 <span class="main-line">Hout Bay Beachfront Hotel</span>
                 <div class="hotel-stars">
@@ -76,8 +82,10 @@
             </div>
           </div>
 
-          <div class="info-card clear-glass">
-            <h2 class="section-title"><i class="bi bi-compass"></i> Included Highlights</h2>
+          <div class="info-card clear-glass" id="attractions-card">
+            <h2 class="section-title">
+              <i class="bi bi-compass"></i> Included Highlights
+            </h2>
             <div class="highlights-list">
               <div class="highlight-item">
                 <i class="bi bi-ticket-perforated"></i>
@@ -89,8 +97,10 @@
             </div>
           </div>
 
-          <div class="info-card clear-glass">
-            <h2 class="section-title"><i class="bi bi-egg-fill"></i> Included Restuarants</h2>
+          <div class="info-card clear-glass" id="restaurants-card">
+            <h2 class="section-title">
+              <i class="bi bi-egg-fill"></i> Included Restuarants
+            </h2>
             <div class="highlights-list">
               <div class="highlight-item">
                 <i class="bi bi-egg-fried"></i>
@@ -103,8 +113,10 @@
           </div>
 
           <div class="info-card clear-glass">
-            <h2 class="section-title"><i class="bi bi-chat-left-text"></i> Traveler Reviews</h2>
-            <div class="review-block">
+            <h2 class="section-title">
+              <i class="bi bi-chat-left-text"></i> Traveler Reviews
+            </h2>
+            <div class="review-block" id="review-card">
               <div class="review-header">
                 <strong>Alice</strong>
                 <span class="stars">
@@ -134,12 +146,51 @@
               <li><i class="bi bi-telephone"></i> +27 12 345 6789</li>
             </ul>
 
-            <button class="btn-reserve">Confirm Booking<i class="bi bi-check-circle-fill"></i></button>
+            <button class="btn-reserve" id="confirm-booking-btn">
+              Confirm Booking<i class="bi bi-check-circle-fill"></i>
+            </button>
           </div>
         </aside>
       </div>
     </main>
 
+    <dialog id="bookingModal" class="glass-modal">
+      <div class="modal-header">
+        <h2>Confirm Your Booking</h2>
+        <button class="close-x-btn" id="close-btn">×</button>
+      </div>
+
+      <div class="modal-body">
+        <h3 id="modalPackageTitle">Ultimate Cape Town Coastal Escape</h3>
+        <p id="modalPackageDates">📅 15 - 22 June (7 nights)</p>
+
+        <hr class="modal-divider" />
+
+        <div class="guest-selector-row">
+          <label for="passengerCount">Number of Travelers:</label>
+          <input type="number" id="passengerCount" value="1" min="1" />
+        </div>
+
+        <div class="price-summary-box">
+          <div class="price-row">
+            <span>Base Price (per person):</span>
+            <span id="basePriceDisplay">R14 500.00</span>
+          </div>
+          <div class="price-row total-row">
+            <span>Total Due:</span>
+            <span id="totalPriceDisplay">R14 500.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="finalize-btn" onclick="submitBookingToBackend()">
+          Confirm & Pay
+        </button>
+      </div>
+    </dialog>
     <script src="../js/traveller-header.js"></script>
+    <script src="../js/package-details.js"></script>
+    <script src="../js/confirm-booking.js"></script>
   </body>
 </html>

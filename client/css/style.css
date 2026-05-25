@@ -58,10 +58,8 @@ body::before {
   border-radius: var(--panel-radius);
 }
 
-button,
-.btn-outline,
-.btn-reserve {
-  width: 100%;
+button {
+  width: auto;
   background-color: var(--amber);
   border-radius: 2rem;
   border: none;
@@ -75,7 +73,7 @@ button,
   gap: 0.5rem;
   justify-content: center;
   align-items: center;
-  margin: auto;
+  margin: 0;
 }
 
 .input-base,

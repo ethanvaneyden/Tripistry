@@ -28,7 +28,9 @@
       </div>
 
       <section class="create-container clear-glass">
-        <h2 class="section-title">Create new travel package</h2>
+        <h2 class="section-title">
+          <i class="bi bi-plus-circle"></i>Create new travel package
+        </h2>
 
         <div class="main-details">
           <input type="text" placeholder="Package Title" id="titleInput" />
@@ -40,17 +42,29 @@
         </div>
 
         <div class="secondary-details">
-          <input type="date" placeholder="Start Date" id="startDateInput" />
-          <input type="date" placeholder="End Date" id="endDateInput" />
+          <div class="date-group">
+            <input type="date" placeholder="Start Date" id="startDateInput" />
+            <i class="bi bi-arrow-right-circle"></i>
+            <input type="date" placeholder="End Date" id="endDateInput" />
+          </div>
           <input
             type="number"
             placeholder="Max Participants"
             id="maxParticipantsInput"
+            min="0"
           />
-          <input type="number" placeholder="Total Price" id="priceInput" />
+          <input
+            type="number"
+            placeholder="Total Price"
+            id="priceInput"
+            min="0"
+          />
+          <input type="text" placeholder="Image URL" id="imageURLInput" />
         </div>
 
-        <h2 class="section-title">Link Resources</h2>
+        <h2 class="section-title">
+          <i class="bi bi-link-45deg"></i>Link Resources
+        </h2>
         <div class="side-by-side">
           <div class="resource-group">
             <button class="resource" id="addFlight">
@@ -74,10 +88,12 @@
             </button>
           </div>
         </div>
-        <button class="publish-button" id="publishPackage">Publish package</button>
+        <button class="publish-button" id="publishPackage">
+          Publish package
+        </button>
       </section>
     </main>
   </body>
   <script src="../js/agency-header.js"></script>
-  <script src="../js/agency-packages.js"></script>
+  <script src="../js/create-package.js"></script>
 </html>

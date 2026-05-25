@@ -181,3 +181,15 @@
     width: 100%;
 }
 
+.no-results {
+    color: whitesmoke;
+    display: flex;
+    flex-direction: column;
+}
+
+.go-book {
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 1rem;
+}
+

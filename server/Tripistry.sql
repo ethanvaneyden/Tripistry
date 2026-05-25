@@ -17,7 +17,7 @@
 
 -- Dumping database structure for triptest
 DROP DATABASE IF EXISTS `tripistry`;
-CREATE DATABASE IF NOT EXISTS `tripistry` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_uca1400_ai_ci */;
+CREATE DATABASE IF NOT EXISTS `tripistry` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 USE `tripistry`;
 
 -- Dumping structure for table triptest.accommodation
