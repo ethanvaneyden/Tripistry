@@ -42,19 +42,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Check URL for explicit Edit mode, OR check SessionStorage for an abandoned draft
   const params = new URLSearchParams(window.location.search);
   const editId = params.get("id") || params.get("PackageID") || params.get("package_id") || params.get("edit");
-  const recoveredDraftId = sessionStorage.getItem("draftPackageId");
 
   if (editId) {
     currentPackageId = editId;
     publishBtn.textContent = "Update package";
     document.querySelector('.concept-current').textContent = "Edit Package";
     await loadPackageDetails(editId, toggleFields);
-  } else if (recoveredDraftId) {
-    currentPackageId = recoveredDraftId;
-    document.querySelector('.concept-current').innerHTML = `<span style="color:#ffb400">Recovered Draft</span>`;
-    await loadPackageDetails(recoveredDraftId, toggleFields);
   } else {
-    toggleFields(); 
+    // Always start fresh — don't recover stale drafts from previous sessions
+    sessionStorage.removeItem("draftPackageId");
+    toggleFields();
   }
 });
 
