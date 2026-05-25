@@ -47,7 +47,7 @@ try {
 
 define('LOGIN_MAX_ATTEMPTS',    5);
 define('LOGIN_WINDOW_SECONDS',  600);   
-define('LOGIN_LOCKOUT_SECONDS', 900);   
+define('LOGIN_LOCKOUT_SECONDS', 10);   
 
 
 $pdo->exec("
