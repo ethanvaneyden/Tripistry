@@ -367,6 +367,7 @@ function showError(message, success = false) {
 publishBtn.addEventListener("click", async () => {
   const title = document.getElementById("titleInput").value.trim();
   const description = document.getElementById("descriptionInput").value.trim();
+  const imageURL = document.getElementById("imageURLInput").value.trim();
   const startDate = document.getElementById("startDateInput").value;
   const endDate = document.getElementById("endDateInput").value;
   const maxParticipants = document.getElementById("maxParticipantsInput").value;
@@ -395,6 +396,7 @@ publishBtn.addEventListener("click", async () => {
     end_date: endDate,
     max_participants: parseInt(maxParticipants),
     total_price: parseFloat(totalPrice),
+    image_url: imageURL
   };
 
   if (currentPackageId) payload.package_id = parseInt(currentPackageId);

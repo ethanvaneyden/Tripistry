@@ -602,10 +602,18 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
             ':total_price'      => (float)$data['total_price'],
         ]);
 
+        $package_id = (int)$pdo->lastInsertId();
+
+         
+        if (!empty($data['image_url'])) {
+            $stmtImg = $pdo->prepare("INSERT INTO packageimage (PackageID, ImageURL) VALUES (:pid, :url)");
+            $stmtImg->execute([':pid' => $package_id, ':url' => trim($data['image_url'])]);
+        }
+
         http_response_code(201);
         echo json_encode([
             "message"    => "Package created successfully.",
-            "package_id" => (int)$pdo->lastInsertId(),
+            "package_id" => $package_id,
         ]);
 
     } catch (PDOException $e) {
@@ -641,7 +649,7 @@ if (strpos($request_uri, '/api/agency/packages/update') !== false) {
             exit();
         }
 
-        // Update package
+        // Update package text details
         $stmt = $pdo->prepare("
             UPDATE package 
             SET Title = :title, 
@@ -662,6 +670,16 @@ if (strpos($request_uri, '/api/agency/packages/update') !== false) {
             ':package_id'       => (int)$data['package_id'],
             ':agency_id'        => (int)$data['agency_id']
         ]);
+
+       
+        $package_id = (int)$data['package_id'];
+        $stmtDel = $pdo->prepare("DELETE FROM packageimage WHERE PackageID = :pid");
+        $stmtDel->execute([':pid' => $package_id]);
+
+        if (!empty($data['image_url'])) {
+            $stmtImg = $pdo->prepare("INSERT INTO packageimage (PackageID, ImageURL) VALUES (:pid, :url)");
+            $stmtImg->execute([':pid' => $package_id, ':url' => trim($data['image_url'])]);
+        }
 
         http_response_code(200);
         echo json_encode(["message" => "Package updated successfully."]);
