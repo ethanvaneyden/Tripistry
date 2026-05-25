@@ -195,9 +195,9 @@ async function openModal(type) {
   }
   
   modalSearch.value = "";
-  modalResults.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.85rem">Type to search or leave blank to browse all.</p>';
   renderLinkedChips();
   modal.showModal();
+  searchResources("");
   setTimeout(() => modalSearch.focus(), 50);
 }
 
@@ -416,7 +416,7 @@ publishBtn.addEventListener("click", async () => {
 
     if (!currentPackageId) currentPackageId = data.package_id;
 
-    // The package is saved! Clear the draft memory so they can start a fresh one later.
+   
     sessionStorage.removeItem("draftPackageId");
 
     showError(
