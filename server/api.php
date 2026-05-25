@@ -501,8 +501,11 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 }
 
 
+
 if (strpos($request_uri, '/api/agency/packages/create') === false &&
     strpos($request_uri, '/api/agency/packages/delete') === false &&
+    strpos($request_uri, '/api/agency/packages/draft') === false &&
+    strpos($request_uri, '/api/agency/packages/update') === false &&
     strpos($request_uri, '/api/agency/packages') !== false) {
 
     if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
@@ -542,7 +545,7 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
                 SELECT PackageID, COUNT(*) AS booking_count
                 FROM booking GROUP BY PackageID
             ) AS BK ON p.PackageID = BK.PackageID
-            WHERE p.AgencyID = :agency_id
+            WHERE p.AgencyID = :agency_id AND p.Title != 'Draft Package'
             GROUP BY
                 p.PackageID, p.Title, p.Description, p.StartDate, p.EndDate,
                 p.MaxParticipants, p.TotalPrice,
@@ -614,6 +617,63 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
     exit();
 }
 
+
+if (strpos($request_uri, '/api/agency/packages/update') !== false) {
+
+    $required = ['package_id', 'agency_id', 'title', 'description', 'start_date', 'end_date', 'max_participants', 'total_price'];
+    foreach ($required as $field) {
+        if (!isset($data[$field]) || $data[$field] === '') {
+            http_response_code(400);
+            echo json_encode(["error" => "Field '$field' is required."]);
+            exit();
+        }
+    }
+
+    try {
+        // Verify ownership
+        $stmt = $pdo->prepare("SELECT AgencyID FROM package WHERE PackageID = :pid");
+        $stmt->execute([':pid' => (int)$data['package_id']]);
+        $pkg = $stmt->fetch();
+
+        if (!$pkg || (int)$pkg['AgencyID'] !== (int)$data['agency_id']) {
+            http_response_code(403);
+            echo json_encode(["error" => "Package not found or access denied."]);
+            exit();
+        }
+
+        // Update package
+        $stmt = $pdo->prepare("
+            UPDATE package 
+            SET Title = :title, 
+                Description = :description, 
+                StartDate = :start_date, 
+                EndDate = :end_date, 
+                MaxParticipants = :max_participants, 
+                TotalPrice = :total_price
+            WHERE PackageID = :package_id AND AgencyID = :agency_id
+        ");
+        $stmt->execute([
+            ':title'            => trim($data['title']),
+            ':description'      => trim($data['description']),
+            ':start_date'       => $data['start_date'],
+            ':end_date'         => $data['end_date'],
+            ':max_participants' => (int)$data['max_participants'],
+            ':total_price'      => (float)$data['total_price'],
+            ':package_id'       => (int)$data['package_id'],
+            ':agency_id'        => (int)$data['agency_id']
+        ]);
+
+        http_response_code(200);
+        echo json_encode(["message" => "Package updated successfully."]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        write_log('ERROR', 'FAILED_TO_UPDATE_PACKAGE', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
+    }
+
+    exit();
+}
 
 if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
@@ -801,6 +861,11 @@ if (strpos($request_uri, '/api/airports/search') !== false) {
 // POST /api/agency/packages/draft
 // Body: { agency_id }
 // -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+// CREATE DRAFT PACKAGE (for resource linking before publish)
+// POST /api/agency/packages/draft
+// Body: { agency_id }
+// -----------------------------------------------------------------------
 if (strpos($request_uri, '/api/agency/packages/draft') !== false) {
 
     if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
@@ -810,9 +875,11 @@ if (strpos($request_uri, '/api/agency/packages/draft') !== false) {
     }
 
     try {
+        // We use DATE_ADD to push the EndDate 1 day into the future to pass the chk_package_dates DB constraint.
+        // We also default TotalPrice to 1 in case there is a strict check preventing 0 price.
         $stmt = $pdo->prepare("
             INSERT INTO package (AgencyID, Title, Description, StartDate, EndDate, MaxParticipants, TotalPrice)
-            VALUES (:aid, 'Draft', '', CURDATE(), CURDATE(), 1, 0)
+            VALUES (:aid, 'Draft Package', 'Draft Description', CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 DAY), 1, 1)
         ");
         $stmt->execute([':aid' => (int)$data['agency_id']]);
         http_response_code(201);
@@ -824,7 +891,6 @@ if (strpos($request_uri, '/api/agency/packages/draft') !== false) {
 
     exit();
 }
-
 // -----------------------------------------------------------------------
 // CREATE BOOKING
 // POST /api/booking/create
@@ -986,7 +1052,8 @@ if (strpos($request_uri, '/api/packages/details') === false &&
     $sort     = isset($data['sort'])     ? trim($data['sort'])     : 'recommended';
 
     
-    $conditions = [];
+   
+    $conditions = ["p.Title != 'Draft Package'"];
     $params     = [];
 
     if ($search !== '') {
