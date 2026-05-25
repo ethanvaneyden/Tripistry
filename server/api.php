@@ -42,8 +42,58 @@ try {
     exit();
 }
 define('LOGIN_MAX_ATTEMPTS',    5);
-define('LOGIN_WINDOW_SECONDS',  600);   // 10-minute sliding window
+define('LOGIN_WINDOW_SECONDS',  600);   
 define('LOGIN_LOCKOUT_SECONDS', 900);
+
+$pdo->exec("
+    CREATE TABLE IF NOT EXISTS login_attempts (
+        id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        ip_address   VARCHAR(45)  NOT NULL,
+        attempted_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_ip_time (ip_address, attempted_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+");
+ 
+function get_client_ip(): string {
+   
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+ 
+function check_rate_limit(PDO $pdo): void {
+    $ip      = get_client_ip();
+    $window  = date('Y-m-d H:i:s', time() - LOGIN_WINDOW_SECONDS);
+ 
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS attempts
+        FROM login_attempts
+        WHERE ip_address = :ip AND attempted_at >= :window
+    ");
+    $stmt->execute([':ip' => $ip, ':window' => $window]);
+    $row = $stmt->fetch();
+ 
+    if ((int)$row['attempts'] >= LOGIN_MAX_ATTEMPTS) {
+        write_log('WARN', 'RATE_LIMIT_BLOCKED', ['ip' => $ip, 'attempts' => $row['attempts']]);
+        http_response_code(429);
+        echo json_encode([
+            "error" => "Too many failed login attempts. Please wait 15 minutes before trying again."
+        ]);
+        exit();
+    }
+}
+ 
+function record_failed_attempt(PDO $pdo): void {
+    $ip = get_client_ip();
+    $pdo->prepare("INSERT INTO login_attempts (ip_address) VALUES (:ip)")
+        ->execute([':ip' => $ip]);
+}
+ 
+function clear_attempts(PDO $pdo): void {
+    
+    $ip = get_client_ip();
+    $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = :ip")
+        ->execute([':ip' => $ip]);
+}
+
 
 $method = $_SERVER['REQUEST_METHOD'];
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
