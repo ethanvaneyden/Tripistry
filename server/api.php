@@ -10,13 +10,7 @@ $db_user = DB_USER;
 $db_pass = DB_PASS;
 $db_name = DB_NAME;
 
-// -----------------------------------------------------------------------
-// SECURITY IMPROVEMENT 1: Centralised Audit & Error Logging
-// All security-relevant events (login attempts, failures, blocked IPs,
-// unexpected errors) are written to a log file outside the web root.
-// This gives a tamper-resistant record for incident review and debugging
-// without leaking internals to the API consumer.
-// -----------------------------------------------------------------------
+
 define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
 
 function write_log(string $level, string $event, array $context = []): void {
@@ -50,25 +44,12 @@ try {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// SECURITY IMPROVEMENT 2: Login Rate-Limiting
-// We track failed login attempts per IP address in the database.
-// After LOGIN_MAX_ATTEMPTS failures within LOGIN_WINDOW_SECONDS the IP is
-// locked out for LOGIN_LOCKOUT_SECONDS.
-//
-// Why in the database rather than a PHP session or flat file?
-// - Works correctly across multiple PHP workers / server restarts
-// - Atomic increment via SQL prevents race conditions
-// - No extra infrastructure (Redis etc.) needed for a XAMPP-based project
-//
-// The login handler calls check_rate_limit() before touching credentials
-// and record_failed_attempt() on every bad login.
-// -----------------------------------------------------------------------
-define('LOGIN_MAX_ATTEMPTS',    5);
-define('LOGIN_WINDOW_SECONDS',  600);   // 10-minute sliding window
-define('LOGIN_LOCKOUT_SECONDS', 900);   // 15-minute lockout
 
-// Create the rate-limit table if it doesn't exist yet (idempotent)
+define('LOGIN_MAX_ATTEMPTS',    5);
+define('LOGIN_WINDOW_SECONDS',  600);   
+define('LOGIN_LOCKOUT_SECONDS', 900);   
+
+
 $pdo->exec("
     CREATE TABLE IF NOT EXISTS login_attempts (
         id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -79,9 +60,6 @@ $pdo->exec("
 ");
 
 function get_client_ip(): string {
-    // Trust only REMOTE_ADDR in a simple XAMPP setup.
-    // If behind a reverse proxy, also check HTTP_X_FORWARDED_FOR —
-    // but only after validating the proxy is trusted.
     return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 }
 
@@ -114,8 +92,7 @@ function record_failed_attempt(PDO $pdo): void {
 }
 
 function clear_attempts(PDO $pdo): void {
-    // On successful login, remove the IP's recent failures so honest
-    // users don't stay locked out after recovering a forgotten password.
+   
     $ip = get_client_ip();
     $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = :ip")
         ->execute([':ip' => $ip]);
@@ -161,11 +138,6 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
             ':name'        => $data['name'],
             ':surname'     => $data['surname'],
             ':email'       => $data['email'],
-            // PASSWORD_BCRYPT with cost 12: bcrypt is the industry-standard
-            // adaptive hashing algorithm. Cost 12 means 2^12 = 4096 rounds,
-            // making brute-force attacks ~4× harder than the PHP default (cost 10)
-            // while still hashing in ~250ms — imperceptible to users but
-            // prohibitively slow for attackers with a stolen hash database.
             ':password'    => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'       => $data['phone'],
             ':nationality' => $data['nationality'],
@@ -219,7 +191,6 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         $stmt->execute([
             ':name'     => $data['name'],
             ':email'    => $data['email'],
-            // Same PASSWORD_BCRYPT cost 12 policy as traveller registration
             ':password' => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'    => $data['phone'],
             ':street'   => $data['street'],
@@ -254,7 +225,6 @@ if (strpos($request_uri, '/api/login') !== false) {
         exit();
     }
 
-    // --- Rate-limit check: block IP if too many recent failures ---
     check_rate_limit($pdo);
 
     $email    = $data['email'];
@@ -272,7 +242,6 @@ if (strpos($request_uri, '/api/login') !== false) {
         clear_attempts($pdo);
         write_log('INFO', 'LOGIN_SUCCESS', ['email' => $email, 'role' => 'traveller']);
 
-        // Re-hash with stronger cost if the stored hash is outdated
         if (password_needs_rehash($user['Password'], PASSWORD_BCRYPT, ['cost' => 12])) {
             $newHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
             $pdo->prepare("UPDATE traveller SET Password = :h WHERE TravellerID = :id")
@@ -323,7 +292,7 @@ if (strpos($request_uri, '/api/login') !== false) {
         exit();
     }
 
-    // Both tables failed — record the failure and log it
+  
     record_failed_attempt($pdo);
     write_log('WARN', 'LOGIN_FAILED', ['email' => $email]);
 
@@ -332,11 +301,7 @@ if (strpos($request_uri, '/api/login') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// SEARCH RESOURCES (flights, accommodations, destinations, restaurants)
-// POST /api/resources/search
-// Body: { type: 'flight'|'accommodation'|'destination'|'restaurant', query? }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/search') !== false) {
 
     $type  = isset($data['type'])  ? trim($data['type'])  : '';
@@ -419,11 +384,7 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// LINK RESOURCE TO PACKAGE
-// POST /api/resources/link
-// Body: { agency_id, package_id, type, resource_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/link') !== false &&
     strpos($request_uri, '/api/resources/unlink') === false) {
 
@@ -480,11 +441,7 @@ if (strpos($request_uri, '/api/resources/link') !== false &&
     exit();
 }
 
-// -----------------------------------------------------------------------
-// UNLINK RESOURCE FROM PACKAGE
-// POST /api/resources/unlink
-// Body: { agency_id, package_id, type, resource_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
     foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
@@ -540,11 +497,7 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET AGENCY'S OWN PACKAGES
-// POST /api/agency/packages
-// Body: { agency_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/create') === false &&
     strpos($request_uri, '/api/agency/packages/delete') === false &&
     strpos($request_uri, '/api/agency/packages') !== false) {
@@ -616,11 +569,7 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
     exit();
 }
 
-// -----------------------------------------------------------------------
-// CREATE PACKAGE
-// POST /api/agency/packages/create
-// Body: { agency_id, title, description, start_date, end_date, max_participants, total_price }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/create') !== false) {
 
     $required = ['agency_id', 'title', 'description', 'start_date', 'end_date', 'max_participants', 'total_price'];
@@ -662,11 +611,7 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// DELETE PACKAGE
-// POST /api/agency/packages/delete
-// Body: { agency_id, package_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
     if (empty($data['agency_id']) || empty($data['package_id'])) {
@@ -710,11 +655,7 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET TRAVELLER'S BOOKINGS
-// POST /api/traveller/bookings
-// Body: { traveller_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
     if (empty($data['traveller_id']) || !is_numeric($data['traveller_id'])) {
@@ -770,22 +711,18 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET PACKAGES (browse / filter / sort)
-// POST /api/packages
-// Body: { search?, price?, rating?, duration?, sort? }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/packages/details') === false &&
     strpos($request_uri, '/api/packages') !== false) {
 
-    // --- Sanitise / read filter params ---
+    
     $search   = isset($data['search'])   ? trim($data['search'])   : '';
     $price    = isset($data['price'])    ? trim($data['price'])    : '';
     $rating   = isset($data['rating'])   ? (int)$data['rating']    : 0;
     $duration = isset($data['duration']) ? trim($data['duration']) : '';
     $sort     = isset($data['sort'])     ? trim($data['sort'])     : 'recommended';
 
-    // --- Build WHERE clauses using a whitelist approach ---
+    
     $conditions = [];
     $params     = [];
 
@@ -794,7 +731,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         $params[':search'] = '%' . $search . '%';
     }
 
-    // Price filter: "0-5000", "5000-15000", "15000+"
+   
     if ($price !== '') {
         if ($price === '0-5000') {
             $conditions[] = "p.TotalPrice < 5000";
@@ -805,13 +742,13 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         }
     }
 
-    // Rating filter: minimum average package review rating
+  
     if ($rating > 0) {
         $conditions[] = "COALESCE(AVG_RATING.avg_rating, 0) >= :rating";
         $params[':rating'] = $rating;
     }
 
-    // Duration filter in nights: "1-3", "4-7", "8-14", "15+"
+   
     if ($duration !== '') {
         if ($duration === '1-3') {
             $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 1 AND 3";
@@ -828,7 +765,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         ? 'WHERE ' . implode(' AND ', $conditions)
         : '';
 
-    // --- Sort order whitelist ---
+  
     $order_map = [
         'recommended' => 'COALESCE(AVG_RATING.avg_rating, 0) DESC',
         'price-low'   => 'p.TotalPrice ASC',
@@ -895,11 +832,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
     exit();
 }
 
-// -----------------------------------------------------------------------
-// GET SINGLE PACKAGE DETAILS
-// POST /api/packages/details
-// Body: { package_id }
-// -----------------------------------------------------------------------
+
 if (strpos($request_uri, '/api/packages/details') !== false) {
 
     if (empty($data['package_id']) || !is_numeric($data['package_id'])) {
@@ -911,7 +844,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
     $package_id = (int)$data['package_id'];
 
     try {
-        // --- Core package + agency ---
+       
         $stmt = $pdo->prepare("
             SELECT
                 p.PackageID,
@@ -941,14 +874,14 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
             exit();
         }
 
-        // --- Images ---
+        
         $stmt = $pdo->prepare("
             SELECT ImageURL FROM packageimage WHERE PackageID = :pid
         ");
         $stmt->execute([':pid' => $package_id]);
         $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        // --- Destinations ---
+        
         $stmt = $pdo->prepare("
             SELECT d.DestinationID, d.Name, d.City, d.Region, d.Country, d.Description
             FROM destination d
@@ -958,7 +891,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $destinations = $stmt->fetchAll();
 
-        // --- Flights (with airport codes) ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 f.FlightID,
@@ -981,7 +914,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $flights = $stmt->fetchAll();
 
-        // --- Accommodations ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 ac.AccommodationID,
@@ -1005,7 +938,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $accommodations = $stmt->fetchAll();
 
-        // --- Attractions ---
+       
         $stmt = $pdo->prepare("
             SELECT
                 at.AttractionID,
@@ -1023,7 +956,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $attractions = $stmt->fetchAll();
 
-        // --- Restaurants ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 r.RestaurantID,
@@ -1041,7 +974,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $restaurants = $stmt->fetchAll();
 
-        // --- Reviews (with traveller first name) ---
+        
         $stmt = $pdo->prepare("
             SELECT
                 rv.ReviewID,
@@ -1057,7 +990,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $reviews = $stmt->fetchAll();
 
-        // --- Average rating ---
+        
         $avg_rating    = 0;
         $review_count  = count($reviews);
         if ($review_count > 0) {
