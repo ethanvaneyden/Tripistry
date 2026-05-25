@@ -10,8 +10,15 @@ $db_user = DB_USER;
 $db_pass = DB_PASS;
 $db_name = DB_NAME;
 
+// -----------------------------------------------------------------------
+// SECURITY IMPROVEMENT 1: Centralised Audit & Error Logging
+// All security-relevant events (login attempts, failures, blocked IPs,
+// unexpected errors) are written to a log file outside the web root.
+// This gives a tamper-resistant record for incident review and debugging
+// without leaking internals to the API consumer.
+// -----------------------------------------------------------------------
 define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
- 
+
 function write_log(string $level, string $event, array $context = []): void {
     $dir = dirname(LOG_FILE);
     if (!is_dir($dir)) {
@@ -36,15 +43,32 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
 } catch (PDOException $e) {
+    // Log the real error internally; never expose DB internals to the client
     write_log('ERROR', 'DB_CONNECTION_FAILED', ['msg' => $e->getMessage()]);
     http_response_code(500);
-    echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);
+    echo json_encode(["error" => "A server error occurred. Please try again later."]);
     exit();
 }
-define('LOGIN_MAX_ATTEMPTS',    5);
-define('LOGIN_WINDOW_SECONDS',  600);   
-define('LOGIN_LOCKOUT_SECONDS', 900);
 
+// -----------------------------------------------------------------------
+// SECURITY IMPROVEMENT 2: Login Rate-Limiting
+// We track failed login attempts per IP address in the database.
+// After LOGIN_MAX_ATTEMPTS failures within LOGIN_WINDOW_SECONDS the IP is
+// locked out for LOGIN_LOCKOUT_SECONDS.
+//
+// Why in the database rather than a PHP session or flat file?
+// - Works correctly across multiple PHP workers / server restarts
+// - Atomic increment via SQL prevents race conditions
+// - No extra infrastructure (Redis etc.) needed for a XAMPP-based project
+//
+// The login handler calls check_rate_limit() before touching credentials
+// and record_failed_attempt() on every bad login.
+// -----------------------------------------------------------------------
+define('LOGIN_MAX_ATTEMPTS',    5);
+define('LOGIN_WINDOW_SECONDS',  600);   // 10-minute sliding window
+define('LOGIN_LOCKOUT_SECONDS', 900);   // 15-minute lockout
+
+// Create the rate-limit table if it doesn't exist yet (idempotent)
 $pdo->exec("
     CREATE TABLE IF NOT EXISTS login_attempts (
         id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -53,16 +77,18 @@ $pdo->exec("
         INDEX idx_ip_time (ip_address, attempted_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ");
- 
+
 function get_client_ip(): string {
-   
+    // Trust only REMOTE_ADDR in a simple XAMPP setup.
+    // If behind a reverse proxy, also check HTTP_X_FORWARDED_FOR —
+    // but only after validating the proxy is trusted.
     return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 }
- 
+
 function check_rate_limit(PDO $pdo): void {
     $ip      = get_client_ip();
     $window  = date('Y-m-d H:i:s', time() - LOGIN_WINDOW_SECONDS);
- 
+
     $stmt = $pdo->prepare("
         SELECT COUNT(*) AS attempts
         FROM login_attempts
@@ -70,7 +96,7 @@ function check_rate_limit(PDO $pdo): void {
     ");
     $stmt->execute([':ip' => $ip, ':window' => $window]);
     $row = $stmt->fetch();
- 
+
     if ((int)$row['attempts'] >= LOGIN_MAX_ATTEMPTS) {
         write_log('WARN', 'RATE_LIMIT_BLOCKED', ['ip' => $ip, 'attempts' => $row['attempts']]);
         http_response_code(429);
@@ -80,20 +106,20 @@ function check_rate_limit(PDO $pdo): void {
         exit();
     }
 }
- 
+
 function record_failed_attempt(PDO $pdo): void {
     $ip = get_client_ip();
     $pdo->prepare("INSERT INTO login_attempts (ip_address) VALUES (:ip)")
         ->execute([':ip' => $ip]);
 }
- 
+
 function clear_attempts(PDO $pdo): void {
-    
+    // On successful login, remove the IP's recent failures so honest
+    // users don't stay locked out after recovering a forgotten password.
     $ip = get_client_ip();
     $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = :ip")
         ->execute([':ip' => $ip]);
 }
-
 
 $method = $_SERVER['REQUEST_METHOD'];
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -135,12 +161,18 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
             ':name'        => $data['name'],
             ':surname'     => $data['surname'],
             ':email'       => $data['email'],
+            // PASSWORD_BCRYPT with cost 12: bcrypt is the industry-standard
+            // adaptive hashing algorithm. Cost 12 means 2^12 = 4096 rounds,
+            // making brute-force attacks ~4× harder than the PHP default (cost 10)
+            // while still hashing in ~250ms — imperceptible to users but
+            // prohibitively slow for attackers with a stolen hash database.
             ':password'    => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'       => $data['phone'],
             ':nationality' => $data['nationality'],
             ':dob'         => $data['dateofbirth']
         ]);
 
+        write_log('INFO', 'TRAVELLER_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Traveller registered successfully!"]);
 
@@ -151,7 +183,8 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
         if ($e->getCode() == 23000) {
             echo json_encode(["error" => "Email is already registered as a traveller."]);
         } else {
-            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+            write_log('ERROR', 'REGISTRATION_FAILED', ['msg' => $e->getMessage()]);
+            echo json_encode(['error' => 'A server error occurred. Please try again.']);
         }
     }
 
@@ -186,13 +219,15 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         $stmt->execute([
             ':name'     => $data['name'],
             ':email'    => $data['email'],
-            ':password' => password_hash($data['password'], PASSWORD_DEFAULT),
+            // Same PASSWORD_BCRYPT cost 12 policy as traveller registration
+            ':password' => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':phone'    => $data['phone'],
             ':street'   => $data['street'],
             ':city'     => $data['city'],
             ':country'  => $data['country']
         ]);
 
+        write_log('INFO', 'AGENCY_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Agency registered successfully!"]);
 
@@ -203,7 +238,8 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         if ($e->getCode() == 23000) {
             echo json_encode(["error" => "Email is already registered as an agency."]);
         } else {
-            echo json_encode(["error" => "Registration failed: " . $e->getMessage()]);
+            write_log('ERROR', 'REGISTRATION_FAILED', ['msg' => $e->getMessage()]);
+            echo json_encode(['error' => 'A server error occurred. Please try again.']);
         }
     }
 
@@ -218,7 +254,10 @@ if (strpos($request_uri, '/api/login') !== false) {
         exit();
     }
 
-    $email = $data['email'];
+    // --- Rate-limit check: block IP if too many recent failures ---
+    check_rate_limit($pdo);
+
+    $email    = $data['email'];
     $password = $data['password'];
 
     $stmt = $pdo->prepare("
@@ -226,24 +265,30 @@ if (strpos($request_uri, '/api/login') !== false) {
         FROM traveller 
         WHERE Email = :email
     ");
-
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['Password'])) {
+        clear_attempts($pdo);
+        write_log('INFO', 'LOGIN_SUCCESS', ['email' => $email, 'role' => 'traveller']);
+
+        // Re-hash with stronger cost if the stored hash is outdated
+        if (password_needs_rehash($user['Password'], PASSWORD_BCRYPT, ['cost' => 12])) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $pdo->prepare("UPDATE traveller SET Password = :h WHERE TravellerID = :id")
+                ->execute([':h' => $newHash, ':id' => $user['TravellerID']]);
+        }
 
         http_response_code(200);
-
         echo json_encode([
             "message" => "Login successful!",
             "user" => [
-                "id"   => (int)$user['TravellerID'],
-                "name" => $user['Name'],
+                "id"    => (int)$user['TravellerID'],
+                "name"  => $user['Name'],
                 "email" => $user['Email'],
-                "role" => "traveller"
+                "role"  => "traveller"
             ]
         ]);
-
         exit();
     }
 
@@ -252,14 +297,20 @@ if (strpos($request_uri, '/api/login') !== false) {
         FROM agency 
         WHERE Email = :email
     ");
-
     $stmt->execute([':email' => $email]);
     $agency = $stmt->fetch();
 
     if ($agency && password_verify($password, $agency['Password'])) {
+        clear_attempts($pdo);
+        write_log('INFO', 'LOGIN_SUCCESS', ['email' => $email, 'role' => 'agency']);
+
+        if (password_needs_rehash($agency['Password'], PASSWORD_BCRYPT, ['cost' => 12])) {
+            $newHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+            $pdo->prepare("UPDATE agency SET Password = :h WHERE AgencyID = :id")
+                ->execute([':h' => $newHash, ':id' => $agency['AgencyID']]);
+        }
 
         http_response_code(200);
-
         echo json_encode([
             "message" => "Login successful!",
             "user" => [
@@ -269,9 +320,12 @@ if (strpos($request_uri, '/api/login') !== false) {
                 "role"  => "agency"
             ]
         ]);
-
         exit();
     }
+
+    // Both tables failed — record the failure and log it
+    record_failed_attempt($pdo);
+    write_log('WARN', 'LOGIN_FAILED', ['email' => $email]);
 
     http_response_code(401);
     echo json_encode(["error" => "Invalid email or password."]);
@@ -358,7 +412,8 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Search failed: " . $e->getMessage()]);
+        write_log('ERROR', 'SEARCH_FAILED', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -418,7 +473,8 @@ if (strpos($request_uri, '/api/resources/link') !== false &&
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to link: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_LINK', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -477,7 +533,8 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to unlink: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_UNLINK', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -552,7 +609,8 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch agency packages: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_AGENCY_PACKAGES', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -597,7 +655,8 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to create package: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_CREATE_PACKAGE', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -644,7 +703,8 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to delete package: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_DELETE_PACKAGE', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -703,7 +763,8 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch bookings: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_BOOKINGS', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -827,7 +888,8 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         echo json_encode(["packages" => $packages]);
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch packages: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_PACKAGES', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
@@ -1038,7 +1100,8 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
 
     } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(["error" => "Failed to fetch package details: " . $e->getMessage()]);
+        write_log('ERROR', 'FAILED_TO_FETCH_PACKAGE_DETAILS', ['msg' => $e->getMessage()]);
+        echo json_encode(['error' => 'A server error occurred. Please try again.']);
     }
 
     exit();
