@@ -47,12 +47,7 @@
             <i class="bi bi-arrow-right-circle"></i>
             <input type="date" placeholder="End Date" id="endDateInput" />
           </div>
-          <input
-            type="number"
-            placeholder="Max Participants"
-            id="maxParticipantsInput"
-            min="0"
-          />
+
           <input
             type="number"
             placeholder="Total Price"
@@ -60,6 +55,25 @@
             min="0"
           />
           <input type="text" placeholder="Image URL" id="imageURLInput" />
+        </div>
+
+        <div class="secondary-details">
+          <h2 class="section-title">
+            <i class="bi bi-person-add"></i>Group Trip Configuration
+          </h2>
+          <div class="group-info">
+            <label for="isGroupTrip">Is it a group trip?</label>
+            <input type="checkbox" id="isGroupTrip" />
+          </div>
+          <div id="groupFieldsContainer">
+            <input
+              id="maxParticipantsInput"
+              type="number"
+              placeholder="Max Participants"
+              id="maxParticipantsInput"
+              min="0"
+            />
+          </div>
         </div>
 
         <h2 class="section-title">
