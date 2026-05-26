@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isGroupTrip.checked) {
       container.classList.add("show-fields");
       maxParticipants.required = true;
-      if (maxParticipants.value === "1") maxParticipants.value = "";
+      if (maxParticipants.value === 1) maxParticipants.value = 1;
     } else {
       container.classList.remove("show-fields");
       maxParticipants.required = false;
-      maxParticipants.value = "1";
+      maxParticipants.value = 1;
     }
   }
 
