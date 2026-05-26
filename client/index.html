@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link href="css/style.css" rel="stylesheet" />
+    <link href="css/auth.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="auth-container">
+      <img src="assets/logo.png" class="logo" alt="logo" />
+      <div class="auth-heading">
+        <h1 class="text-center">Login</h1>
+        <h2 class="text-center">Please enter your details to login</h2>
+      </div>
+
+      <div class="auth-card clear-glass">
+        <form class="auth-form">
+          <input
+            type="email"
+            id="email"
+            placeholder="Email address"
+            required
+            autocomplete="email"
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            required
+            autocomplete="current-password"
+          />
+          <button type="submit" id="submit">Sign In</button>
+        </form>
+
+        <div class="auth-footer" id="auth-footer">
+          <div class="error-container" id="error-container"></div>
+          <p>
+            Don't have an account?<br />
+            <a href="traveller/registertraveller.html">Register as Traveler</a
+            ><br />
+            <a href="agency/registeragency.html">Register as Agency</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <script src="js/login.js"></script>
+  </body>
+</html>

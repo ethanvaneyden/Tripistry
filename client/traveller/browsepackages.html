@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Browse packages</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/nav.css" rel="stylesheet" />
+    <link href="../css/packages.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
+
+  <body>
+    <header>
+      <nav class="navbar" id="navbar"></nav>
+    </header>
+    <main>
+      <div class="breadcrumb">
+        <a href="#" class="concept-link">Traveller Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="concept-current">Browse Packages</span>
+      </div>
+
+      <div class="side-by-side">
+        <aside class="filter-toolbar clear-glass">
+          <h2 class="section-title">Search and Filter</h2>
+          <div class="search">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" name="search" id="search" placeholder="Name" />
+          </div>
+
+            <div class="select-wrapper">
+              <i class="bi bi-tags filter-icon"></i>
+              <select id="filter-price" class="toolbar-select" aria-label="Filter by price">
+                <option value="">Any Price</option>
+                <option value="0-5000">Under R5,000</option>
+                <option value="5000-15000">R5,000 - R15,000</option>
+                <option value="15000+">Over R15,000</option>
+              </select>
+            </div>
+
+            <div class="select-wrapper">
+              <i class="bi bi-star filter-icon"></i>
+              <select id="filter-rating" class="toolbar-select" aria-label="Filter by rating">
+                <option value="">Any Rating</option>
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars & Up</option>
+                <option value="3">3 Stars & Up</option>
+              </select>
+            </div>
+
+            <div class="select-wrapper">
+              <i class="bi bi-clock"></i>
+              <select id="filter-duration" class="toolbar-select" aria-label="Filter by duration">
+                <option value="">Any duration</option>
+                <option value="1-3">1-3 nights</option>
+                <option value="4-7">4-7 nights</option>
+                <option value="8-14">8-14 nights</option>
+                <option value="15+">15 nights & Up</option>
+              </select>
+            </div>
+
+            <div class="select-wrapper">
+              <i class="bi bi-sliders filter-icon"></i>
+              <select id="filter-sort" class="toolbar-select" aria-label="Sort packages">
+                <option value="recommended">Recommended</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+              </select>
+            </div>
+        </aside>
+
+        <section
+          class="package-section clear-glass"
+          id="package-section"
+        ></section>
+      </div>
+    </main>
+  </body>
+  <script src="../js/traveller-header.js"></script>
+  <script src="../js/traveller-packages.js"></script>
+</html>

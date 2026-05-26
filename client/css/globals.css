@@ -1,0 +1,34 @@
+:root {
+  --navy-dark: #1A365D;
+  --navy-main: #1c2541;
+  --light-blue: #3182CE;
+  --cool-grey: #4A5568;
+  --amber: #f4a261;
+
+  --shadow-sm: 0 2px 8px rgba(49, 35, 35, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  --panel-bg: rgba(255, 255, 255, 0.04);
+  --panel-border: rgba(255, 255, 255, 0.06);
+  --panel-radius: 1rem;
+  --panel-padding: 1.5rem;
+  --panel-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+
+  --btn-radius: 2rem;
+  --btn-transition: all 0.2s ease-in-out;
+
+  --glass-bg: rgba(0, 41, 107, 0.65);
+  --amber-bright: #ffb400;
+  --amber-dark: #ff8c00;
+  --amber-soft: #f4a261;
+  --danger: #e05555;
+  --success: #00c864;
+  --completed: #6495ed;
+
+  /* Keep only very small global helpers here */
+}
+
+.hidden { display: none !important; }
+
+

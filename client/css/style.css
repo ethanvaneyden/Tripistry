@@ -1,0 +1,327 @@
+@import 'globals.css';
+@import 'text.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image: url('../assets/backdrop.jpg');
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  padding: 1rem;
+  position: relative;
+}
+
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 191, 0, 0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.panel-base,
+.main-details,
+.secondary-details,
+.side-by-side,
+.review-summary-dashboard,
+.metric-card,
+.review-bubble,
+.group-trip-card,
+.info-card,
+.highlight-item,
+.booking-widget {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+}
+
+button {
+  width: auto;
+  background-color: var(--amber);
+  border-radius: 2rem;
+  border: none;
+  padding: 0.6rem;
+  font-weight: 600;
+  color: var(--navy-dark);
+  transition: 0.2s ease;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  transition: 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+button:active,
+.btn-outline:active,
+.btn-reserve:active,
+.finalize-btn {
+  transform: scale(0.97);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.input-base,
+input:not([type="checkbox"]),
+select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  padding: 0.9rem 1.2rem;
+  color: whitesmoke;
+  font-size: 0.95rem;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+select {
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+}
+
+select option {
+  background-color: var(--navy-dark);
+  color: whitesmoke;
+  padding: 10px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #f4a261;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(253, 197, 0, 0.3);
+}
+
+input::placeholder,
+.auth-form input::placeholder {
+  color: lightgray;
+  opacity: 1;
+}
+
+/* Headings & Hero Titles */
+h1,
+h2,
+h3 {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.section-title,
+.section-title-left {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-title-left {
+  justify-content: flex-start;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.navy-icon {
+  color: var(--navy-dark);
+}
+
+.amber-icon {
+  color: var(--amber);
+}
+
+
+.auth-container .logo {
+  height: 96px;
+  width: auto;
+}
+
+.frosted-glass {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 40px 0 rgba(31, 38, 135, 0.45);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  backdrop-filter: blur(25px) saturate(180%);
+
+}
+
+.clear-glass {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  backdrop-filter: blur(10px) saturate(180%);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+.concept-link {
+  color: #ffffff;
+  opacity: 0.6;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.concept-link:hover {
+  opacity: 1;
+  color: #e08244;
+}
+
+.breadcrumb-separator {
+  color: #ffffff;
+  opacity: 0.3;
+  font-size: 0.8rem;
+}
+
+.concept-current {
+  color: #e08244;
+  font-weight: 600;
+}
+
+.error-container {
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  background: rgba(255, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: whitesmoke;
+  font-size: 0.9rem;
+  display: none;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.disabled {
+  filter: grayscale(100%) brightness(0.8);
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.error-visible {
+  display: block !important;
+}
+
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-toast {
+  min-width: 280px;
+  max-width: 350px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(20, 30, 50, 0.7);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: #ffffff;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+  opacity: 0;
+}
+
+.custom-toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.custom-toast.success {
+  border-left: 4px solid #10b981;
+}
+
+.custom-toast.success i {
+  color: #10b981;
+}
+
+.custom-toast.error {
+  border-left: 4px solid #f97316;
+}
+
+.custom-toast.error i {
+  color: #f97316;
+}
+
+.custom-toast.info {
+  border-left: 4px solid #3b82f6;
+}
+
+.custom-toast.info i {
+  color: #3b82f6;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

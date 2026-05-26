@@ -1,0 +1,344 @@
+.package-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-rows: auto;
+    padding: 2rem;
+    gap: 1.5rem;
+    justify-items: stretch;
+    align-items: stretch;
+    justify-content: start;
+    align-content: start;
+}
+
+.side-by-side {
+    display: grid;
+    align-items: start;
+    grid-template-columns: 300px 1fr;
+    gap: 3rem;
+}
+
+.package-card {
+    max-width: 360px;
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.package-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.card-content {
+    padding: 1.2rem;
+}
+
+.package-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.card-meta {
+    list-style-type: none;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: black;
+    margin-bottom: 0.25rem;
+}
+
+.card-destination {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.card-description {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: grey;
+    margin-bottom: 1rem;
+}
+
+.card-agency {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: grey;
+
+}
+
+.card-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--navy-dark);
+}
+
+.card-price small,
+.card-date small {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: grey;
+}
+
+.card-date {
+    font-size: 0.8rem;
+    color: grey;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.5rem 0;
+}
+
+.stars {
+    color: var(--amber);
+    font-size: 0.85rem;
+}
+
+.rating span:last-child {
+    font-weight: 600;
+    color: var(--amber);
+}
+
+.btn-outline {
+    width: 100%;
+    background-color: var(--amber);
+    border-radius: 2rem;
+    border: none;
+    padding: 0.6rem;
+    font-weight: 600;
+    color: var(--navy-dark);
+    transition: 0.2s ease;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+}
+
+
+.btn-outline:hover {
+    background: var(--navy-dark);
+    color: white;
+}
+
+.section-heading {
+    text-align: center;
+    color: white;
+}
+
+.filter-toolbar {
+    display: flex;
+    justify-content: left;
+    flex-direction: column;
+    align-items: stretch;
+    height: fit-content;
+    padding: 2rem;
+    gap: 1.5rem;
+    position: sticky;
+    top: 20vh;
+}
+
+.search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+
+.select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.select-wrapper i,
+.search i {
+    color: var(--amber);
+}
+
+
+
+.select-wrapper select:focus,
+.search input:focus {
+    border-color: var(--amber);
+}
+
+.toolbar-select {
+    width: 100%;
+}
+
+.no-results {
+    color: whitesmoke;
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+.go-book {
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Utilities for package lists and booking/status displays */
+.icon-2rem {
+    font-size: 2rem;
+}
+
+.icon-amber {
+    color: var(--amber);
+}
+
+.icon-error {
+    color: var(--amber);
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-stretch {
+    flex: 1;
+    text-align: center;
+}
+
+.btn-cancel {
+    flex: 1;
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.booked-date {
+    color: grey;
+}
+
+.status-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-pending {
+    background: rgba(255, 180, 0, 0.2);
+    color: var(--amber-bright);
+    border: 1px solid rgba(255, 180, 0, 0.4);
+}
+
+.badge-confirmed {
+    background: rgba(0, 200, 100, 0.2);
+    color: var(--success);
+    border: 1px solid rgba(0, 200, 100, 0.4);
+}
+
+.badge-cancelled {
+    background: rgba(220, 50, 50, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(220, 50, 50, 0.4);
+}
+
+.badge-completed {
+    background: rgba(100, 149, 237, 0.2);
+    color: var(--completed);
+    border: 1px solid rgba(100, 149, 237, 0.4);
+}
+
+.fade-out {
+    transition: opacity 0.3s;
+    opacity: 0;
+}
+
+/* Confirmation modal buttons */
+.btn-confirm-yes,
+.btn-confirm-no {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm-yes:hover {
+    background: #d63f3f;
+    filter: brightness(1.1);
+}
+
+.btn-confirm-no {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-confirm-no:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+    color: var(--amber);
+}
+
+.modal-body {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.glass-modal {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: 90%;
+    max-width: 480px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
+    color: #fff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.glass-modal::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+
+}
+
+.close-x-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/auth.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="auth-container">
+      <img src="../assets/logo.png" class="logo" alt="Logo">
+      <div class="auth-heading">
+        <h1>Register an agency</h1>
+        <h2>Please enter the details of your agency</h2>
+      </div>
+
+      <div class="auth-card clear-glass">
+        <form class="auth-form">
+          <div class="input-group">
+            <h2 class="text-center">Personal details</h2>
+            <div class="input-row">
+              <input
+                type="text"
+                id="name"
+                placeholder="Name"
+                required
+                autocomplete="name"
+              />
+              <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                required
+                autocomplete="email"
+              />
+            </div>
+
+            <div class="input-row">
+              <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+                autocomplete="new-password"
+              />
+              <input
+                type="text"
+                id="phone"
+                placeholder="Phone"
+                required
+                autocomplete="tel"
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <h2 class="text-center">Address</h2>
+            <input type="text" id="street" placeholder="Street" required />
+            <input type="text" id="city" placeholder="City" required />
+            <input type="text" id="country" placeholder="Country" required />
+          </div>
+          <button type="submit">Register</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Have an account? <a href="../index.html">Login</a></p>
+          <p>Not an agency? <a href="../traveller/registertraveller.html">Join as traveller</a></p>
+        </div>
+      </div>
+    </div>
+    <script src="../js/register-agency.js"></script>
+  </body>
+</html>

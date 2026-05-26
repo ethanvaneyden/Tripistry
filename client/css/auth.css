@@ -1,0 +1,135 @@
+.auth-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-heading {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-heading h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: white;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.auth-heading h2 {
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: white;
+}
+
+.input-group h2 {
+
+  font-weight: normal;
+  color: var(--amber);
+}
+
+.auth-heading p {
+  color: white;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 2rem;
+  padding: 2rem 2rem 2rem 2rem;
+}
+
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+
+.auth-form input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+}
+
+/* Button */
+.auth-form button {
+  width: 100%;
+  background-color: var(--amber);
+  border-radius: 2rem;
+  border: none;
+  padding: 0.6rem;
+  font-weight: 600;
+  color: var(--navy-dark);
+  transition: 0.2s ease;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+
+.auth-form button:hover {
+ transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0 8px 24px rgba(224, 130, 68, 0.4);
+}
+
+.auth-form button:active {
+  transform: translateY(0);
+}
+
+
+.auth-footer {
+  text-align: center;
+  margin-top: 1.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+.auth-footer a {
+  color: var(--amber);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.auth-footer a:hover {
+  color: var(--amber);
+  text-decoration: underline;
+}
+
+input[type="date"] {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+input::-webkit-datetime-edit { 
+  color: rgba(255, 255, 255, 0.6); 
+}
+
+/* Error container used by login/register pages */
+.error-container { padding:0.6rem 0.8rem; border-radius:6px; margin:0.5rem 0; }
+.error-container.success { background: rgba(0,180,100,0.15); border:1px solid rgba(0,200,100,0.4); }

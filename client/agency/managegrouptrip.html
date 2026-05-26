@@ -1,0 +1,138 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tripistry Console — Group Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Dashboard view for group status and summary metrics."
+    />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/nav.css" rel="stylesheet" />
+    <link href="../css/packages.css" rel="stylesheet" />
+    <link href="../css/managegrouptrip.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
+
+  <body>
+    <header>
+      <nav class="navbar" id="navbar"></nav>
+    </header>
+
+    <main>
+      <div class="breadcrumb">
+        <a href="agencydashboard.html" class="concept-link">Agency Home</a>
+        <span class="breadcrumb-separator">/</span>
+        <a href="grouptrips.html" class="concept-link">Group Trips</a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="concept-current">Manage Group Trip</span>
+      </div>
+
+      <section class="clear-glass management-wrapper">
+        <div class="status-card">
+          <h3 class="panel-title"><i class="bi bi-calendar"></i>Trip Status</h3>
+          <div class="summary-grid">
+            <div class="status-column">
+              <div class="info-row">
+                <span class="label-text"
+                  ><i class="bi bi-hash"></i> Group ID</span
+                >
+                <span class="status-value">GRP-9924</span>
+              </div>
+              <div class="info-row">
+                <span class="label-text"
+                  ><i class="bi bi-journal-album"></i> Package</span
+                >
+                <span class="status-value">PKG-1234 — Kruger Safari</span>
+              </div>
+              <div class="info-row">
+                <span class="label-text"
+                  ><i class="bi bi-flag"></i> Current Status</span
+                >
+                <span class="status-badge open">Open</span>
+              </div>
+              <div class="info-row">
+                <span class="label-text"
+                  ><i class="bi bi-calendar-event"></i> Dates</span
+                >
+                <span class="status-value">12 June – 19 June 2026</span>
+              </div>
+            </div>
+
+            <div class="status-column status-right">
+              <div class="info-row">
+                <span class="label-text"
+                  ><i class="bi bi-person-fill"></i> Seats</span
+                >
+                <span id="live-seats-counter" class="status-value">0 / 0</span>
+              </div>
+              <div class="status-change-row">
+                <label class="label-text" for="maxParticipants"
+                  ><i class="bi bi-people-fill"></i> Max Participants</label
+                >
+                <input
+                  type="number"
+                  id="maxParticipants"
+                  class="capacity-input"
+                  min="1"
+                  value="12"
+                />
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-save-changes">
+            <i class="bi bi-check-circle"></i> Save Changes
+          </button>
+        </div>
+
+        <section class="manifest-card">
+          <div class="card-header-wrapper">
+            <h3 class="panel-title">
+              <i class="bi bi-people"></i> Active Passenger Bookings
+            </h3>
+          </div>
+
+          <div class="table-responsive">
+            <table class="manifest-table">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Primary Passenger</th>
+                  <th>Seats Claimed</th>
+                  <th>Financial Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>BKG-4001</strong></td>
+                  <td>Ethan Van Eyden</td>
+                  <td>2 Seats</td>
+                  <td><span class="badge badge-paid">Confirmed</span></td>
+                </tr>
+                <tr>
+                  <td><strong>BKG-4009</strong></td>
+                  <td>Sarah Jenkins</td>
+                  <td>1 Seat</td>
+                  <td><span class="badge badge-paid">Confirmed</span></td>
+                </tr>
+                <tr>
+                  <td><strong>BKG-4012</strong></td>
+                  <td>John Doe</td>
+                  <td>4 Seats</td>
+                  <td><span class="badge badge-deposit">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="../js/agency-header.js"></script>
+    <script src="../js/manage-group.js"></script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="" />
+    <link href="../css/style.css" rel="stylesheet" />
+    <link href="../css/auth.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <div class="auth-container">
+      <img src="../assets/logo.png" class="logo" alt="logo" />
+      <div class="auth-heading">
+        <h1>Register traveller</h1>
+        <h2>Please enter your personal details</h2>
+      </div>
+
+      <div class="auth-card clear-glass">
+        <form class="auth-form">
+          <div class="input-group">
+            <h2 class="text-center">Personal details</h2>
+            <div class="input-row">
+              <input
+                type="text"
+                id="name"
+                placeholder="Name"
+                required
+                autocomplete="name"
+              />
+              <input
+                type="text"
+                id="surname"
+                placeholder="Surname"
+                required
+                autocomplete="name"
+              />
+            </div>
+
+            <div class="input-row">
+              <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                required
+                autocomplete="email"
+              />
+              <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="input-row">
+              <input
+                type="text"
+                id="phone"
+                placeholder="Phone"
+                required
+                autocomplete="email"
+              />
+              <input
+                type="text"
+                id="nationality"
+                placeholder="Nationality"
+                required
+                autocomplete="new-password"
+              />
+            </div>
+
+            <input
+              type="date"
+              id="dateofbirth"
+              placeholder="Date of birth"
+              required
+              autocomplete="email"
+            />
+          </div>
+          <button type="submit">Register</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Have an account? <a href="../index.html">Login</a></p>
+          <p>Not a traveller? <a href="../agency/registeragency.html">Join as agency</a></p>
+        </div>
+      </div>
+    </div>
+    <script src="../js/register-traveller.js"></script>
+  </body>
+</html>
