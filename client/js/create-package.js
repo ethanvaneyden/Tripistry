@@ -11,8 +11,8 @@ if (!user || user.role !== "agency") {
 // -----------------------------------------------------------------------
 // State
 // -----------------------------------------------------------------------
-let currentPackageId = null;   
-let draftPending     = false;  
+let currentPackageId = null;
+let draftPending = false;
 
 const publishBtn = document.getElementById("publishPackage");
 const linked = { flight: [], accommodation: [], destination: [], restaurant: [] };
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       container.classList.remove("show-fields");
       maxParticipants.required = false;
-      maxParticipants.value = "1"; 
+      maxParticipants.value = "1";
     }
   }
 
@@ -67,24 +67,24 @@ async function loadPackageDetails(id, toggleCallback) {
       body: JSON.stringify({ package_id: parseInt(id) })
     });
     const data = await res.json();
-    
+
     if (data.package) {
       const p = data.package;
-      
+
       // Strip out default draft text so it doesn't overwrite the user's intended input
       document.getElementById("titleInput").value = p.Title === "Draft Package" ? "" : (p.Title || "");
       document.getElementById("descriptionInput").value = p.Description === "Draft Description" ? "" : (p.Description || "");
-      
+
       document.getElementById("startDateInput").value = p.StartDate ? p.StartDate.substring(0, 10) : "";
       document.getElementById("endDateInput").value = p.EndDate ? p.EndDate.substring(0, 10) : "";
       document.getElementById("priceInput").value = p.TotalPrice || "";
-      
+
       const isGroupTrip = document.getElementById("isGroupTrip");
       const maxParticipantsInput = document.getElementById("maxParticipantsInput");
-      
+
       if (p.MaxParticipants > 1) {
         isGroupTrip.checked = true;
-        if (toggleCallback) toggleCallback(); 
+        if (toggleCallback) toggleCallback();
         maxParticipantsInput.value = p.MaxParticipants;
       } else {
         isGroupTrip.checked = false;
@@ -145,32 +145,32 @@ modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); }
 // Ensure a draft package exists before opening any modal
 // -----------------------------------------------------------------------
 async function ensurePackageExists() {
-    if (currentPackageId) return true;
-    if (draftPending) return false;
-    
-    draftPending = true;
-    try {
-        const res = await fetch(`${API_BASE}/api/agency/packages/draft`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ agency_id: user.id })
-        });
-        const data = await res.json();
-        if (!res.ok) { showError(data.error || 'Could not create draft package.'); return false; }
-        
-        currentPackageId = data.package_id;
-        
-        // Save to session storage so if they refresh, the script recovers it!
-        sessionStorage.setItem("draftPackageId", currentPackageId);
-        
-        document.querySelector('.concept-current').innerHTML = `<span class="accent-text">Draft Package</span>`;
-        return true;
-    } catch (err) {
-        showError('Could not connect to server.');
-        return false;
-    } finally {
-        draftPending = false;
-    }
+  if (currentPackageId) return true;
+  if (draftPending) return false;
+
+  draftPending = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/agency/packages/draft`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agency_id: user.id })
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.error || 'Could not create draft package.'); return false; }
+
+    currentPackageId = data.package_id;
+
+    // Save to session storage so if they refresh, the script recovers it!
+    sessionStorage.setItem("draftPackageId", currentPackageId);
+
+    document.querySelector('.concept-current').innerHTML = `<span class="accent-text">Draft Package</span>`;
+    return true;
+  } catch (err) {
+    showError('Could not connect to server.');
+    return false;
+  } finally {
+    draftPending = false;
+  }
 }
 
 // -----------------------------------------------------------------------
@@ -181,7 +181,7 @@ let searchTimer = null;
 
 async function openModal(type) {
   const hasPackage = await ensurePackageExists();
-  if (!hasPackage) return; 
+  if (!hasPackage) return;
 
   activeType = type;
   const labels = {
@@ -190,11 +190,11 @@ async function openModal(type) {
     destination: "Add Destination",
     restaurant: "Add Restaurant",
   };
-  
-  if(document.getElementById("modal-title-text")) {
-      document.getElementById("modal-title-text").textContent = labels[type];
+
+  if (document.getElementById("modal-title-text")) {
+    document.getElementById("modal-title-text").textContent = labels[type];
   }
-  
+
   modalSearch.value = "";
   renderLinkedChips();
   modal.showModal();
@@ -256,9 +256,9 @@ async function searchResources(query) {
     modalResults.innerHTML = "";
     data.results.forEach((item) => {
       const alreadyLinked = linked[activeType].some((l) => l.id === item.id);
-        const row = document.createElement("div");
-        row.classList.add('result-row');
-          row.innerHTML = `
+      const row = document.createElement("div");
+      row.classList.add('result-row');
+      row.innerHTML = `
               <div class="result-main">
                 <div class="result-title">${buildLabel(item)}</div>
                 <div class="result-sub">${buildSublabel(item)}</div>
@@ -297,13 +297,13 @@ async function linkResource(item) {
       body: JSON.stringify({ agency_id: user.id, package_id: currentPackageId, type: activeType, resource_id: item.id }),
     });
     const data = await res.json();
-    if (!res.ok) { alert(data.error || "Failed to link."); return; }
+    if (!res.ok) { showToast("Failed to link.", 'error'); return; }
 
     linked[activeType].push({ id: item.id, label: buildLabel(item) });
     renderLinkedChips();
     updateResourceButton(activeType);
     searchResources(modalSearch.value.trim());
-  } catch (err) { alert("Could not connect to server."); }
+  } catch (err) { showToast("Could not connect to server.", 'error'); }
 }
 
 async function unlinkResource(resourceId) {
@@ -314,13 +314,13 @@ async function unlinkResource(resourceId) {
       body: JSON.stringify({ agency_id: user.id, package_id: currentPackageId, type: activeType, resource_id: resourceId }),
     });
     const data = await res.json();
-    if (!res.ok) { alert(data.error || "Failed to unlink."); return; }
+    if (!res.ok) { showToast("Failed to unlink.", 'error'); return; }
 
     linked[activeType] = linked[activeType].filter((l) => l.id !== resourceId);
     renderLinkedChips();
     updateResourceButton(activeType);
     searchResources(modalSearch.value.trim());
-  } catch (err) { alert("Could not connect to server."); }
+  } catch (err) { showToast("Could not connect to server.", 'error'); }
 }
 
 // -----------------------------------------------------------------------
@@ -383,9 +383,9 @@ publishBtn.addEventListener("click", async () => {
   publishBtn.disabled = true;
   publishBtn.textContent = "Saving…";
 
-  const endpoint = currentPackageId 
-      ? `${API_BASE}/api/agency/packages/update` 
-      : `${API_BASE}/api/agency/packages/create`;
+  const endpoint = currentPackageId
+    ? `${API_BASE}/api/agency/packages/update`
+    : `${API_BASE}/api/agency/packages/create`;
 
   const payload = {
     agency_id: user.id,
@@ -415,7 +415,7 @@ publishBtn.addEventListener("click", async () => {
 
     if (!currentPackageId) currentPackageId = data.package_id;
 
-   
+
     sessionStorage.removeItem("draftPackageId");
 
     showError(
@@ -430,7 +430,36 @@ publishBtn.addEventListener("click", async () => {
   } finally {
     publishBtn.disabled = false;
     if (publishBtn.textContent === "Saving…") {
-        publishBtn.textContent = currentPackageId ? "Update package" : "Publish package";
+      publishBtn.textContent = currentPackageId ? "Update package" : "Publish package";
     }
   }
 });
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
+}

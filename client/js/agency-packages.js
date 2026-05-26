@@ -56,7 +56,7 @@ async function deletePackage(packageId, cardEl) {
         const data = await res.json();
 
         if (!res.ok) {
-            alert(data.error || 'Failed to delete package.');
+            showToast(data.error, 'error');
             return;
         }
 
@@ -64,7 +64,7 @@ async function deletePackage(packageId, cardEl) {
         setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
 
     } catch (err) {
-        alert('Could not connect to the server.');
+        showToast('Could not connect to the server.', 'error');
     }
 }
 
@@ -189,6 +189,35 @@ function showCustomConfirm() {
         document.getElementById('confirmClose').addEventListener('click', () => handleChoice(false));
         
     });
+}
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
 }
 
 fetchPackages();

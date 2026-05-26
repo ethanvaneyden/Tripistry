@@ -184,7 +184,8 @@
 .no-results {
     color: whitesmoke;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 1rem;
 }
 
 .go-book {
@@ -203,7 +204,7 @@
 }
 
 .icon-error {
-    color: var(--danger);
+    color: var(--amber);
 }
 
 .action-row {

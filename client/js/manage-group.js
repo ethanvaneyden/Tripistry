@@ -29,7 +29,7 @@ async function loadGroupManifest() {
     const data = await res.json();
 
     if (!res.ok || !data.package) {
-      alert("Error parsing group trip specifications.");
+      showToast("Error parsing group trip specifications.", 'error');
       return;
     }
 
@@ -37,7 +37,7 @@ async function loadGroupManifest() {
     populateUI();
 
   } catch (err) {
-    alert("Could not load passenger manifest metrics.");
+    showToast("Could not load passenger manifest metrics.", 'error');
   }
 }
 
@@ -98,7 +98,7 @@ async function saveCapacityChanges() {
   const saveBtn = document.querySelector(".btn-save-changes");
 
   if (!maxParticipantsInput || parseInt(maxParticipantsInput) < 1) {
-    alert("Capacity limits must reflect at least 1 seat allotment entry.");
+    showToast("Capacity limits must reflect at least 1 seat allotment entry.", 'info');
     return;
   }
 
@@ -123,7 +123,7 @@ async function saveCapacityChanges() {
 
     if (!res.ok) {
       const errData = await res.json();
-      alert(errData.error || "Failed to adjust specifications.");
+      showToast("Failed to adjust specifications.", 'error');
       saveBtn.disabled = false;
       saveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Changes';
       return;
@@ -133,8 +133,37 @@ async function saveCapacityChanges() {
     window.location.href = "grouptrips.html";
 
   } catch (err) {
-    alert("Could not commit updates to database context.");
+    showToast("Could not commit updates to database context.", 'error');
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Save Changes';
   }
+}
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
 }

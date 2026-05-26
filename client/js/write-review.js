@@ -88,7 +88,7 @@ document.addEventListener('click', async (e) => {
         const comment = document.getElementById('review-text-input').value;
 
         if (rating === 0) {
-            alert("Please select a star rating.");
+            showToast("Please select a star rating.", 'info');
             return;
         }
 
@@ -109,11 +109,11 @@ document.addEventListener('click', async (e) => {
                 loadTravellerData(); 
             } else {
                 const err = await res.json();
-                alert(err.error || "Failed to save review.");
+                showToast("Failed to save review.", 'error');
             }
         } catch (error) {
             console.error("Submission error:", error);
-            alert("Network error. Please try again.");
+            showToast("Network error. Please try again.", 'error');
         }
     }
 
@@ -318,3 +318,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
+}

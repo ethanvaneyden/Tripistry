@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------
 // State — populated by package-details.js via initBookingModal()
 // -----------------------------------------------------------------------
-let _packageId   = null;
+let _packageId = null;
 let _packageTitle = '';
 let _packageDates = '';
 let _pricePerPerson = 0;
@@ -11,11 +11,11 @@ let _maxParticipants = null;
 // Called by package-details.js once the package data is loaded
 // -----------------------------------------------------------------------
 function initBookingModal({ packageId, title, startDate, endDate, nights, pricePerPerson, maxParticipants }) {
-    _packageId       = packageId;
-    _packageTitle    = title;
-    _pricePerPerson  = pricePerPerson;
+    _packageId = packageId;
+    _packageTitle = title;
+    _pricePerPerson = pricePerPerson;
     _maxParticipants = maxParticipants;
-    _packageDates    = `📅 ${formatDateRange(startDate, endDate, nights)}`;
+    _packageDates = `📅 ${formatDateRange(startDate, endDate, nights)}`;
 
     if (maxParticipants) {
         document.getElementById('passengerCount').max = maxParticipants;
@@ -42,7 +42,7 @@ function formatPrice(amount) {
 function openBookingModal() {
     const user = JSON.parse(sessionStorage.getItem('user') || 'null');
     if (!user || user.role !== 'traveller') {
-        alert('Please log in as a traveller to book this package.');
+        showToast('Please log in as a traveller to book this package.', 'error');
         return;
     }
 
@@ -71,7 +71,7 @@ function calculateTotalPrice() {
     const passengers = parseInt(document.getElementById('passengerCount').value) || 1;
     const total = _pricePerPerson * passengers;
     document.getElementById('pricePerPersonDisplay').textContent = formatPrice(_pricePerPerson);
-    document.getElementById('totalPriceDisplay').textContent     = formatPrice(total);
+    document.getElementById('totalPriceDisplay').textContent = formatPrice(total);
 }
 
 // -----------------------------------------------------------------------
@@ -80,8 +80,8 @@ function calculateTotalPrice() {
 function setFeedback(message, type) {
     const el = document.getElementById('bookingFeedback');
     if (!el) return;
-    el.textContent  = message;
-    el.className    = `booking-feedback ${type}`;  // 'success' | 'error' | ''
+    el.textContent = message;
+    el.className = `booking-feedback ${type}`;  // 'success' | 'error' | ''
     el.classList.toggle('hidden', !message);
 }
 
@@ -91,7 +91,7 @@ function setFeedback(message, type) {
 async function submitBookingToBackend() {
     const user = JSON.parse(sessionStorage.getItem('user') || 'null');
     if (!user || user.role !== 'traveller') {
-        alert('Session expired. Please log in again.');
+        showToast('Session expired. Please log in again.', 'error');
         return;
     }
 
@@ -106,17 +106,17 @@ async function submitBookingToBackend() {
     }
 
     const finalizeBtn = document.querySelector('.finalize-btn');
-    finalizeBtn.disabled   = true;
+    finalizeBtn.disabled = true;
     finalizeBtn.textContent = 'Processing…';
     setFeedback('', '');
 
     try {
         const res = await fetch(`${API_BASE}/api/booking/create`, {
-            method:  'POST',
+            method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({
-                traveller_id:     user.id,
-                package_id:       _packageId,
+                traveller_id: user.id,
+                package_id: _packageId,
                 number_of_people: passengers
             })
         });
@@ -145,7 +145,7 @@ async function submitBookingToBackend() {
         console.error('Booking error:', err);
     } finally {
         if (finalizeBtn.textContent === 'Processing…') {
-            finalizeBtn.disabled    = false;
+            finalizeBtn.disabled = false;
             finalizeBtn.textContent = 'Confirm & Pay';
         }
     }
@@ -157,3 +157,32 @@ async function submitBookingToBackend() {
 document.getElementById('confirm-booking-btn').addEventListener('click', openBookingModal);
 document.getElementById('close-btn').addEventListener('click', closeBookingModal);
 document.getElementById('passengerCount').addEventListener('input', calculateTotalPrice);
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi-exclaimation-triangle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
+}
