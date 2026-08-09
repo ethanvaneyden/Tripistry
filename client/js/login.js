@@ -6,13 +6,12 @@ const emailField = document.getElementById("email");
 
 // Show a success message if arriving after registration
 const params = new URLSearchParams(window.location.search);
-if (params.get("registered") === "1") {
-  const error = document.getElementById("error-container");
-  if (error) {
-    error.classList.add("error-visible");
-    error.style.background = "rgba(0,180,100,0.15)";
-    error.style.borderColor = "rgba(0,200,100,0.4)";
-    error.innerHTML = `
+if (params.get('registered') === '1') {
+    const error = document.getElementById('error-container');
+    if (error) {
+        error.classList.add('error-visible');
+        error.classList.add('success');
+        error.innerHTML = `
             <i class="bi bi-check-circle-fill"></i>
             <span>Account created! You can now log in.</span>`;
   }
@@ -48,12 +47,11 @@ submit.addEventListener("click", async (e) => {
   submit.disabled = false;
   submit.textContent = "Login";
 
-  if (response.message !== "Login successful!") {
-    const error = document.getElementById("error-container");
-    error.classList.add("error-visible");
-    error.style.background = "";
-    error.style.borderColor = "";
-    error.innerHTML = `
+    if (response.message !== 'Login successful!') {
+        const error = document.getElementById('error-container');
+        error.classList.add('error-visible');
+        error.classList.remove('success');
+        error.innerHTML = `
             <i class="bi bi-exclamation-circle-fill"></i>
             <span id="error-text">${response.error || "Incorrect email or password"}</span>`;
     return;

@@ -205,17 +205,21 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(25px);
     color: #fff;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .review-modal::backdrop {
     background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 }
+
+/* Loading text used on review pages */
+.loading-text { padding: 20px; color: white; }
+.muted-padded { color: rgba(255,255,255,0.45); padding: 1rem; }
 
 .close-btn {
     background: none;
@@ -296,8 +300,9 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
 
-    backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+
 
     color: white;
     font-family: inherit;

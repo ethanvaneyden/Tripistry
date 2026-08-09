@@ -1,5 +1,5 @@
-const API_BASE = "/api.php";
-const packageSection = document.getElementById("package-section");
+const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const packageSection = document.getElementById('package-section');
 
 // -----------------------------------------------------------------------
 // Auth guard — must be logged in as an agency
@@ -49,24 +49,27 @@ function updateStats(totalPackages, avgRating) {
 // Delete a package
 // -----------------------------------------------------------------------
 async function deletePackage(packageId, cardEl) {
-  if (
-    !confirm(
-      "Are you sure you want to delete this package? This cannot be undone.",
-    )
-  )
-    return;
+    const confirmed = await showCustomConfirm();
+    if (!confirmed) return;
 
-  try {
-    const res = await fetch(`${API_BASE}/api/agency/packages/delete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agency_id: user.id, package_id: packageId }),
-    });
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_BASE}/api/agency/packages/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agency_id: user.id, package_id: packageId }),
+        });
+        const data = await res.json();
 
-    if (!res.ok) {
-      alert(data.error || "Failed to delete package.");
-      return;
+        if (!res.ok) {
+            showToast(data.error, 'error');
+            return;
+        }
+
+        cardEl.classList.add('fade-out');
+        setTimeout(() => { cardEl.remove(); fetchPackages(); }, 300);
+
+    } catch (err) {
+        showToast('Could not connect to the server.', 'error');
     }
 
     cardEl.style.transition = "opacity 0.3s";
@@ -84,16 +87,14 @@ async function deletePackage(packageId, cardEl) {
 // Build a package card
 // -----------------------------------------------------------------------
 function createCard(pkg) {
-  const card = document.createElement("div");
-  const nights = pkg.Nights || 0;
-  const location =
-    [pkg.City, pkg.Country].filter(Boolean).join(", ") || "Unknown destination";
-  const thumbnail =
-    pkg.ThumbnailURL ||
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600";
+    const card = document.createElement('div');
+    const nights = pkg.Nights || 0;
+    const location = [pkg.City, pkg.Country].filter(Boolean).join(', ') || 'Unknown destination';
+    const thumbnail = pkg.ThumbnailURL
+        || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600';
 
-  card.classList.add("package-card");
-  card.innerHTML = `
+    card.classList.add('package-card');
+    card.innerHTML = `
         <img
             class="package-image"
             src="${thumbnail}"
@@ -139,17 +140,17 @@ function createCard(pkg) {
 async function fetchPackages() {
   packageSection.innerHTML = `
         <div class="no-results">
-            <i class="bi bi-arrow-repeat" style="font-size:2rem;color:var(--amber)"></i>
+            <i class="bi bi-arrow-repeat icon-2rem icon-amber"></i>
             <p>Loading your packages…</p>
         </div>`;
 
-  try {
-    const res = await fetch(`${API_BASE}/api/agency/packages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agency_id: user.id }),
-    });
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_BASE}/api/agency/packages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agency_id: user.id }),
+        });
+        const data = await res.json();
 
     if (!res.ok) {
       packageSection.innerHTML = `<div class="no-results"><p>${data.error}</p></div>`;
@@ -163,10 +164,10 @@ async function fetchPackages() {
     if (!data.packages || data.packages.length === 0) {
       packageSection.innerHTML = `
                 <div class="no-results">
-                    <i class="bi bi-inbox" style="font-size:2rem;color:var(--amber)"></i>
+                    <i class="bi bi-inbox icon-2rem icon-amber"></i>
                     <p>You haven't created any packages yet.
-                       <a href="createpackage.html">Create one now</a>
                     </p>
+                    <a href="createpackage.html">Create one now</a>
                 </div>`;
       return;
     }
@@ -178,6 +179,59 @@ async function fetchPackages() {
                 <p>Could not connect to the server. Make sure XAMPP is running.</p>
             </div>`;
   }
+}
+
+function showCustomConfirm() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmationModal');
+        const confirmBtn = document.getElementById('confirmYes');
+        const cancelBtn = document.getElementById('confirmNo');
+        const xButton = document.getElementById('confirmClose')
+
+        modal.showModal()
+
+        function handleChoice(choice) {
+            modal.close();
+            confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+            cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            xButton.replaceWith(xButton.cloneNode(true));
+            resolve(choice);
+        }
+
+        document.getElementById('confirmYes').addEventListener('click', () => handleChoice(true));
+        document.getElementById('confirmNo').addEventListener('click', () => handleChoice(false));
+        document.getElementById('confirmClose').addEventListener('click', () => handleChoice(false));
+        
+    });
+}
+
+function showToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    let iconClass = 'bi-info-circle';
+    if (type === 'success') iconClass = 'bi-check-circle';
+    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+    toast.innerHTML = `
+        <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
+        <div class="toast-message" style="flex-grow: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 4000);
 }
 
 fetchPackages();

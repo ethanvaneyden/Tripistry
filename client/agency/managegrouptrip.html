@@ -68,21 +68,8 @@
                 <span class="label-text"
                   ><i class="bi bi-person-fill"></i> Seats</span
                 >
-                <span class="status-value">8 / 12</span>
+                <span id="live-seats-counter" class="status-value">0 / 0</span>
               </div>
-
-              <div class="status-change-row">
-                <label class="label-text" for="groupStatus"
-                  ><i class="bi bi-toggle-on"></i> Set Status</label
-                >
-                <select id="groupStatus" class="status-select">
-                  <option value="open" selected>Open</option>
-                  <option value="full" selected>Full</option>
-                  <option value="cancelled" selected>Cancelled</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-
               <div class="status-change-row">
                 <label class="label-text" for="maxParticipants"
                   ><i class="bi bi-people-fill"></i> Max Participants</label
@@ -136,9 +123,7 @@
                   <td><strong>BKG-4012</strong></td>
                   <td>John Doe</td>
                   <td>4 Seats</td>
-                  <td>
-                    <span class="badge badge-deposit">Pending</span>
-                  </td>
+                  <td><span class="badge badge-deposit">Pending</span></td>
                 </tr>
               </tbody>
             </table>
@@ -148,5 +133,6 @@
     </main>
 
     <script src="../js/agency-header.js"></script>
+    <script src="../js/manage-group.js"></script>
   </body>
 </html>
