@@ -8,6 +8,9 @@
     margin-bottom: 1rem;
     gap: 2rem;
 }
+.muted-padded {
+    color: whitesmoke;
+}
 
 .trips-section {
     display: flex;
@@ -41,6 +44,19 @@
     height: 100%;
     border-radius: 1rem;
 }
+
+/* Component-based progress fill classes (nearest 10%) */
+.progress-fill--p0 { width: 0%; }
+.progress-fill--p10 { width: 10%; }
+.progress-fill--p20 { width: 20%; }
+.progress-fill--p30 { width: 30%; }
+.progress-fill--p40 { width: 40%; }
+.progress-fill--p50 { width: 50%; }
+.progress-fill--p60 { width: 60%; }
+.progress-fill--p70 { width: 70%; }
+.progress-fill--p80 { width: 80%; }
+.progress-fill--p90 { width: 90%; }
+.progress-fill--p100 { width: 100%; }
 
 .group-info h3 {
     color: white;

@@ -9,11 +9,7 @@
     <link href="../css/nav.css" rel="stylesheet" />
     <link href="../css/agencydashboard.css" rel="stylesheet" />
     <link href="../css/review.css" rel="stylesheet" />
-
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   </head>
 
   <body>
@@ -29,95 +25,16 @@
       </div>
 
       <div class="review-summary-dashboard clear-glass">
-        <div class="metric-card">
-          <span class="metric-label">Total Reviews</span>
-          <span class="metric-value">45</span>
-        </div>
-
-        <div class="metric-card">
-          <span class="metric-label">Avg. Package Rating</span>
-          <div class="metric-stars-row">
-            <span class="metric-value">4.2</span>
-            <div class="stars">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="metric-card">
-          <span class="metric-label">Avg. Agency Rating</span>
-          <div class="metric-stars-row">
-            <span class="metric-value">4.8</span>
-            <div class="stars">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-            </div>
-          </div>
-        </div>
+        <p class="loading-text">Loading metrics...</p>
       </div>
 
       <section class="clear-glass review-section">
-        <h2 class="section-title"><i class="bi bi-chat-left-text"></i>Featured reviews</h2>
-
-        <div class="review-bubble">
-          <div class="review-header">
-            <div class="reviewer-info">
-              <div>
-                <h4 class="reviewer-name-light">Sarah J.</h4>
-                <span class="review-date-light">June 2026</span>
-              </div>
-            </div>
-            <div class="stars">
-              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-              ><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-              ><i class="bi bi-star-fill"></i>
-            </div>
-          </div>
-
-          <p class="review-text-light">
-            "Excellent service and transparent pricing. Loved the vineyard
-            tour!"
-          </p>
-
-          <div class="review-footer">
-            <span class="badge-package">Cape Town Escape</span>
-          </div>
-        </div>
-
-        <div class="review-bubble">
-          <div class="review-header">
-            <div class="reviewer-info">
-              <div>
-                <h4 class="reviewer-name-light">Mike D.</h4>
-                <span class="review-date-light">June 2026</span>
-              </div>
-            </div>
-            <div class="stars">
-              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i
-              ><i class="bi bi-star-fill"></i><i class="bi bi-star"></i
-              ><i class="bi bi-star"></i>
-            </div>
-          </div>
-
-          <p class="review-text-light">
-            "Great guides but accommodation was quite basic for the price."
-          </p>
-
-          <div class="review-footer">
-            <span class="badge-package">Kruger Safari</span>
-          </div>
-        </div>
+         <h2 class="section-title"><i class="bi bi-chat-left-text"></i> Package Reviews</h2>
+         <p class="loading-text">Loading reviews...</p>
       </section>
     </main>
+    
+    <script src="../js/agency-header.js"></script>
+    <script src="../js/write-review.js"></script>
   </body>
-
-  <script src="../js/agency-header.js"></script>
-  <script src="../js/agency-packages.js"></script>
 </html>
