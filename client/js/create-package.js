@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost/Tripistry/server/api.php";
+const API_BASE = "/api.php";
 
 // -----------------------------------------------------------------------
 // Auth guard

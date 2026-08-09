@@ -1,22 +1,23 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
+header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 $db_host = DB_HOST;
+$db_port = DB_PORT;
 $db_user = DB_USER;
 $db_pass = DB_PASS;
 $db_name = DB_NAME;
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200); 
+    http_response_code(200);
     exit;
 }
 
 try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
+    $pdo = new PDO("mysql:host=$db_host;port=$db_port;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
     ]);
@@ -74,7 +75,6 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
 
         http_response_code(201);
         echo json_encode(["message" => "Traveller registered successfully!"]);
-
     } catch (PDOException $e) {
 
         http_response_code(400);
@@ -126,7 +126,6 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
 
         http_response_code(201);
         echo json_encode(["message" => "Agency registered successfully!"]);
-
     } catch (PDOException $e) {
 
         http_response_code(400);
@@ -286,7 +285,6 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 
         http_response_code(200);
         echo json_encode(["results" => $stmt->fetchAll()]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Search failed: " . $e->getMessage()]);
@@ -300,8 +298,10 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 // POST /api/resources/link
 // Body: { agency_id, package_id, type, resource_id }
 // -----------------------------------------------------------------------
-if (strpos($request_uri, '/api/resources/link') !== false &&
-    strpos($request_uri, '/api/resources/unlink') === false) {
+if (
+    strpos($request_uri, '/api/resources/link') !== false &&
+    strpos($request_uri, '/api/resources/unlink') === false
+) {
 
     foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
         if (empty($data[$field])) {
@@ -346,7 +346,6 @@ if (strpos($request_uri, '/api/resources/link') !== false &&
 
         http_response_code(200);
         echo json_encode(["message" => ucfirst($type) . " linked successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to link: " . $e->getMessage()]);
@@ -405,7 +404,6 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
         http_response_code(200);
         echo json_encode(["message" => ucfirst($type) . " unlinked successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to unlink: " . $e->getMessage()]);
@@ -419,9 +417,11 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 // POST /api/agency/packages
 // Body: { agency_id }
 // -----------------------------------------------------------------------
-if (strpos($request_uri, '/api/agency/packages/create') === false &&
+if (
+    strpos($request_uri, '/api/agency/packages/create') === false &&
     strpos($request_uri, '/api/agency/packages/delete') === false &&
-    strpos($request_uri, '/api/agency/packages') !== false) {
+    strpos($request_uri, '/api/agency/packages') !== false
+) {
 
     if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
         http_response_code(400);
@@ -480,7 +480,6 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
             "total_packages" => $total_packages,
             "avg_rating"     => $avg_rating,
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to fetch agency packages: " . $e->getMessage()]);
@@ -525,7 +524,6 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
             "message"    => "Package created successfully.",
             "package_id" => (int)$pdo->lastInsertId(),
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to create package: " . $e->getMessage()]);
@@ -572,7 +570,6 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
         http_response_code(200);
         echo json_encode(["message" => "Package deleted successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to delete package: " . $e->getMessage()]);
@@ -631,7 +628,6 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
         http_response_code(200);
         echo json_encode(["bookings" => $bookings]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to fetch bookings: " . $e->getMessage()]);
@@ -645,8 +641,10 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 // POST /api/packages
 // Body: { search?, price?, rating?, duration?, sort? }
 // -----------------------------------------------------------------------
-if (strpos($request_uri, '/api/packages/details') === false &&
-    strpos($request_uri, '/api/packages') !== false) {
+if (
+    strpos($request_uri, '/api/packages/details') === false &&
+    strpos($request_uri, '/api/packages') !== false
+) {
 
     // --- Sanitise / read filter params ---
     $search   = isset($data['search'])   ? trim($data['search'])   : '';
@@ -945,7 +943,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 "StartDate"      => $package['StartDate'],
                 "EndDate"        => $package['EndDate'],
                 "Nights"         => (int)$package['Nights'],
-                "MaxParticipants"=> (int)$package['MaxParticipants'],
+                "MaxParticipants" => (int)$package['MaxParticipants'],
                 "TotalPrice"     => (float)$package['TotalPrice'],
                 "AvgRating"      => $avg_rating,
                 "ReviewCount"    => $review_count,
@@ -966,7 +964,6 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 "Reviews"        => $reviews,
             ]
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to fetch package details: " . $e->getMessage()]);
@@ -977,4 +974,3 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
 
 http_response_code(404);
 echo json_encode(["error" => "Endpoint not found."]);
-?>
