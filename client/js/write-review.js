@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost/Tripistry/server/api.php';
+const API_BASE_URL = '/server/api.php';
 
 // Safely parse user storage
 const userStorage = JSON.parse(sessionStorage.getItem('user'));
@@ -70,7 +70,7 @@ function renderModal(packageId, packageName, existingReview = null) {
 // Global Event Delegation (Prevents duplicate listeners & memory leaks)
 // =========================================================================
 document.addEventListener('click', async (e) => {
-    
+
     // 1. Close Modal Logic
     if (e.target.closest('#close-modal-btn') || e.target === modal) {
         modal.close();
@@ -82,7 +82,7 @@ document.addEventListener('click', async (e) => {
         const action = btn.getAttribute('data-action');
         const pid = btn.getAttribute('data-pid');
         const rid = btn.getAttribute('data-rid');
-        
+
         const ratingElement = document.querySelector('input[name="rating"]:checked');
         const rating = ratingElement ? parseInt(ratingElement.value) : 0;
         const comment = document.getElementById('review-text-input').value;
@@ -93,7 +93,7 @@ document.addEventListener('click', async (e) => {
         }
 
         const endpoint = action === 'create' ? '?route=/api/review/create' : '?route=/api/review/update';
-        const payload = action === 'create' 
+        const payload = action === 'create'
             ? { traveller_id: userStorage.id, package_id: pid, rating, comment }
             : { review_id: rid, traveller_id: userStorage.id, rating, comment };
 
@@ -103,10 +103,10 @@ document.addEventListener('click', async (e) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            
+
             if (res.ok) {
                 modal.close();
-                loadTravellerData(); 
+                loadTravellerData();
             } else {
                 const err = await res.json();
                 showToast("Failed to save review.", 'error');
@@ -135,7 +135,7 @@ document.addEventListener('click', async (e) => {
 
     // 5. Delete Review Logic
     if (e.target.closest('.delete-review-trigger')) {
-        if(confirm('Are you sure you want to delete this review?')) {
+        if (confirm('Are you sure you want to delete this review?')) {
             const rid = e.target.closest('.delete-review-trigger').dataset.rid;
             try {
                 await fetch(API_BASE_URL + '?route=/api/review/delete', {
@@ -156,13 +156,13 @@ document.addEventListener('click', async (e) => {
 // =========================================================================
 async function loadTravellerData() {
     const workspace = document.querySelector('.reviews-workspace');
-    if (!workspace) return; 
+    if (!workspace) return;
 
     workspace.innerHTML = '<p style="padding: 20px; color: white;">Loading your reviews...</p>';
 
     try {
         // FIX: Points to the correct review endpoint instead of /api/packages
-         const res  = await fetch(`${API_BASE_URL}?route=/api/review/traveller`, {
+        const res = await fetch(`${API_BASE_URL}?route=/api/review/traveller`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ traveller_id: userStorage.id })
@@ -176,7 +176,7 @@ async function loadTravellerData() {
         // Render Eligible Packages
         html += `<div class="review-card">
                     <h2 class="section-title"><i class="bi bi-clock-history"></i> Share Your Experience</h2>`;
-        
+
         if (data.eligible_packages && data.eligible_packages.length > 0) {
             data.eligible_packages.forEach(pkg => {
                 html += `
@@ -198,7 +198,7 @@ async function loadTravellerData() {
         // Render Review History
         html += `<div class="review-card">
                     <h3 class="section-title"><i class="bi bi-chat-left-check"></i> Your Review History</h3>`;
-        
+
         if (data.review_history && data.review_history.length > 0) {
             data.review_history.forEach(rev => {
                 html += `
@@ -246,7 +246,7 @@ async function loadTravellerData() {
 async function loadAgencyData() {
     const dashboard = document.querySelector('.review-summary-dashboard');
     const reviewSection = document.querySelector('.review-section');
-    if (!dashboard || !reviewSection) return; 
+    if (!dashboard || !reviewSection) return;
 
     try {
         const res = await fetch(API_BASE_URL + '?route=/api/review/agency', {
@@ -274,7 +274,7 @@ async function loadAgencyData() {
 
         // Render Review Feed
         let feedHtml = `<h2 class="section-title"><i class="bi bi-chat-left-text"></i> Package Reviews</h2>`;
-        
+
         if (data.reviews && data.reviews.length > 0) {
             data.reviews.forEach(rev => {
                 feedHtml += `

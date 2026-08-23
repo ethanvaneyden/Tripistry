@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 const packageSection = document.querySelector('.package-section');
 
 // -----------------------------------------------------------------------
@@ -116,10 +116,10 @@ function createCard(booking) {
                     View package <i class="bi bi-chevron-double-right"></i>
                 </a>
                 ${booking.Status === 'Pending'
-                    ? `<button class="btn-cancel-booking btn-outline btn-cancel" data-id="${booking.BookingID}">
+            ? `<button class="btn-cancel-booking btn-outline btn-cancel" data-id="${booking.BookingID}">
                            Cancel <i class="bi bi-x-circle"></i>
                        </button>`
-                    : ''}
+            : ''}
             </div>
         </div>`;
 

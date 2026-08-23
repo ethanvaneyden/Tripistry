@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 const packageSection = document.getElementById('package-section');
 
 // -----------------------------------------------------------------------
@@ -187,7 +187,7 @@ function showCustomConfirm() {
         document.getElementById('confirmYes').addEventListener('click', () => handleChoice(true));
         document.getElementById('confirmNo').addEventListener('click', () => handleChoice(false));
         document.getElementById('confirmClose').addEventListener('click', () => handleChoice(false));
-        
+
     });
 }
 

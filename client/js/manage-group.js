@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost/Tripistry/server/api.php";
+const API_BASE = "/server/api.php";
 
 const user = JSON.parse(sessionStorage.getItem("user") || "null");
 if (!user || user.role !== "agency") {
@@ -43,15 +43,15 @@ async function loadGroupManifest() {
 
 function populateUI() {
   const p = packageData;
-  const bookingsList = p.BookingsList || []; 
+  const bookingsList = p.BookingsList || [];
   const totalBookedSeats = bookingsList.reduce((sum, bk) => sum + parseInt(bk.SeatsClaimed || 0), 0);
 
- 
+
   document.querySelector(".status-value").textContent = `GRP-${p.PackageID}`;
-  
+
   const packageTitleSpan = document.querySelector(".info-row:nth-child(2) .status-value");
   if (packageTitleSpan) packageTitleSpan.textContent = `PKG-${p.PackageID} — ${p.Title}`;
-  
+
   const datesSpan = document.querySelector(".info-row:nth-child(4) .status-value");
   if (datesSpan && p.StartDate && p.EndDate) {
     const start = new Date(p.StartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -59,7 +59,7 @@ function populateUI() {
     datesSpan.textContent = `${start} – ${end}`;
   }
 
- 
+
   const seatsCounterSpan = document.getElementById("live-seats-counter");
   if (seatsCounterSpan) {
     seatsCounterSpan.textContent = `${totalBookedSeats} / ${p.MaxParticipants}`;
@@ -79,8 +79,8 @@ function populateUI() {
 
   bookingsList.forEach((bk) => {
     const row = document.createElement("tr");
-    const statusClass = bk.FinancialStatus.toLowerCase() === 'confirmed' || bk.FinancialStatus.toLowerCase() === 'approved' 
-      ? 'badge-paid' 
+    const statusClass = bk.FinancialStatus.toLowerCase() === 'confirmed' || bk.FinancialStatus.toLowerCase() === 'approved'
+      ? 'badge-paid'
       : 'badge-deposit';
 
     row.innerHTML = `
@@ -129,7 +129,7 @@ async function saveCapacityChanges() {
       return;
     }
 
-   
+
     window.location.href = "grouptrips.html";
 
   } catch (err) {
@@ -140,30 +140,30 @@ async function saveCapacityChanges() {
 }
 
 function showToast(message, type = 'info') {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        document.body.appendChild(container);
-    }
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
 
-    let iconClass = 'bi-info-circle';
-    if (type === 'success') iconClass = 'bi-check-circle';
-    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+  let iconClass = 'bi-info-circle';
+  if (type === 'success') iconClass = 'bi-check-circle';
+  if (type === 'error') iconClass = 'bi bi-exclamation-circle';
 
-    const toast = document.createElement('div');
-    toast.className = `custom-toast ${type}`;
-    toast.innerHTML = `
+  const toast = document.createElement('div');
+  toast.className = `custom-toast ${type}`;
+  toast.innerHTML = `
         <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
         <div class="toast-message" style="flex-grow: 1;">${message}</div>
     `;
 
-    container.appendChild(toast);
+  container.appendChild(toast);
 
-    setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => toast.classList.add('show'), 50);
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => toast.remove());
-    }, 4000);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove());
+  }, 4000);
 }

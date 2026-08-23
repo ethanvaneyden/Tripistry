@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost/Tripistry/server/api.php";
+const API_BASE = "/server/api.php";
 
 // Auth guard — must be logged in as an agency
 const user = JSON.parse(sessionStorage.getItem("user") || "null");
@@ -41,7 +41,7 @@ async function fetchGroupTrips() {
     allGroupPackages = (data.packages || []).filter(p => parseInt(p.MaxParticipants) > 1);
     renderTrips(allGroupPackages);
 
-    } catch (err) {
+  } catch (err) {
     container.innerHTML = `<h2 class="section-title-left">Active Group Expeditions</h2>
                            <p class="text-error">Could not connect to server.</p>`;
   }
@@ -50,11 +50,11 @@ async function fetchGroupTrips() {
 function renderTrips(packages) {
   const container = document.querySelector(".trips-section");
   if (!container) return;
-  
+
   // Re-render heading frame layout cleanly
   container.innerHTML = '<h2 class="section-title-left">Active Group Expeditions</h2>';
 
-    if (packages.length === 0) {
+  if (packages.length === 0) {
     container.innerHTML += '<p class="muted-padded">No active group expeditions matched your filter criteria.</p>';
     return;
   }
@@ -63,7 +63,7 @@ function renderTrips(packages) {
     const totalSpots = parseInt(pkg.MaxParticipants || 1);
     const seatsFilled = parseInt(pkg.SeatsFilled || 0);
     const percentFilled = Math.min(Math.round((seatsFilled / totalSpots) * 100), 100);
-    
+
     // Parse the date display cleanly
     const dateObj = pkg.StartDate ? new Date(pkg.StartDate) : new Date();
     const dateFormatted = dateObj.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
@@ -102,7 +102,7 @@ function filterTrips() {
     const matchesId = `grp-${pkg.PackageID}`.includes(query) || pkg.PackageID.toString().includes(query) || pkg.Title.toLowerCase().includes(query);
     const seatsFilled = parseInt(pkg.SeatsFilled || 0);
     const totalSpots = parseInt(pkg.MaxParticipants || 1);
-    
+
     let matchesStatus = true;
     if (statusFilter === "Fully Booked") {
       matchesStatus = (seatsFilled >= totalSpots);

@@ -1,33 +1,28 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Accept, Authorization");
-require_once 'config.php';
 
-$db_host = DB_HOST;
-$db_user = DB_USER;
-$db_pass = DB_PASS;
-$db_name = DB_NAME;
+$db_host = getenv('DB_HOST');
+$db_user = getenv('DB_USER');
+$db_pass = getenv('DB_PASS');
+$db_name = getenv('DB_NAME');
 
 
-define('LOG_FILE', __DIR__ . '/../../logs/tripistry_audit.log');
+define('LOG_FILE', '/var/log/tripistry/tripistry_audit.log');
 
-function write_log(string $level, string $event, array $context = []): void {
-    $dir = dirname(LOG_FILE);
-    if (!is_dir($dir)) {
-        mkdir($dir, 0750, true);
-    }
-    $ip      = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $uri     = $_SERVER['REQUEST_URI']  ?? '';
-    $ts      = date('Y-m-d H:i:s');
-    $ctx     = empty($context) ? '' : ' ' . json_encode($context);
-    $line    = "[$ts] [$level] [$ip] $event$ctx URI=$uri" . PHP_EOL;
-    file_put_contents(LOG_FILE, $line, FILE_APPEND | LOCK_EX);
+function write_log(string $level, string $event, array $context = []): void
+{
+    $ip  = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    $ts  = date('Y-m-d H:i:s');
+    $ctx = empty($context) ? '' : ' ' . json_encode($context);
+
+    error_log("[$ts] [$level] [$ip] $event$ctx URI=$uri");
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200); 
+    http_response_code(200);
     exit;
 }
 
@@ -46,8 +41,8 @@ try {
 
 
 define('LOGIN_MAX_ATTEMPTS',    5);
-define('LOGIN_WINDOW_SECONDS',  600);   
-define('LOGIN_LOCKOUT_SECONDS', 900);   
+define('LOGIN_WINDOW_SECONDS',  600);
+define('LOGIN_LOCKOUT_SECONDS', 900);
 
 
 $pdo->exec("
@@ -59,11 +54,13 @@ $pdo->exec("
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ");
 
-function get_client_ip(): string {
+function get_client_ip(): string
+{
     return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 }
 
-function check_rate_limit(PDO $pdo): void {
+function check_rate_limit(PDO $pdo): void
+{
     $ip      = get_client_ip();
     $window  = date('Y-m-d H:i:s', time() - LOGIN_WINDOW_SECONDS);
 
@@ -85,14 +82,16 @@ function check_rate_limit(PDO $pdo): void {
     }
 }
 
-function record_failed_attempt(PDO $pdo): void {
+function record_failed_attempt(PDO $pdo): void
+{
     $ip = get_client_ip();
     $pdo->prepare("INSERT INTO login_attempts (ip_address) VALUES (:ip)")
         ->execute([':ip' => $ip]);
 }
 
-function clear_attempts(PDO $pdo): void {
-   
+function clear_attempts(PDO $pdo): void
+{
+
     $ip = get_client_ip();
     $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = :ip")
         ->execute([':ip' => $ip]);
@@ -100,8 +99,8 @@ function clear_attempts(PDO $pdo): void {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-$request_uri = isset($_GET['route']) 
-    ? $_GET['route'] 
+$request_uri = isset($_GET['route'])
+    ? $_GET['route']
     : parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 if ($method !== 'POST') {
@@ -150,7 +149,6 @@ if (strpos($request_uri, '/api/register/traveller') !== false) {
         write_log('INFO', 'TRAVELLER_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Traveller registered successfully!"]);
-
     } catch (PDOException $e) {
 
         http_response_code(400);
@@ -204,7 +202,6 @@ if (strpos($request_uri, '/api/register/agency') !== false) {
         write_log('INFO', 'AGENCY_REGISTERED', ['email' => $data['email']]);
         http_response_code(201);
         echo json_encode(["message" => "Agency registered successfully!"]);
-
     } catch (PDOException $e) {
 
         http_response_code(400);
@@ -295,7 +292,7 @@ if (strpos($request_uri, '/api/login') !== false) {
         exit();
     }
 
-  
+
     record_failed_attempt($pdo);
     write_log('WARN', 'LOGIN_FAILED', ['email' => $email]);
 
@@ -377,7 +374,6 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 
         http_response_code(200);
         echo json_encode(["results" => $stmt->fetchAll()]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'SEARCH_FAILED', ['msg' => $e->getMessage()]);
@@ -388,8 +384,10 @@ if (strpos($request_uri, '/api/resources/search') !== false) {
 }
 
 
-if (strpos($request_uri, '/api/resources/link') !== false &&
-    strpos($request_uri, '/api/resources/unlink') === false) {
+if (
+    strpos($request_uri, '/api/resources/link') !== false &&
+    strpos($request_uri, '/api/resources/unlink') === false
+) {
 
     foreach (['agency_id', 'package_id', 'type', 'resource_id'] as $field) {
         if (empty($data[$field])) {
@@ -434,7 +432,6 @@ if (strpos($request_uri, '/api/resources/link') !== false &&
 
         http_response_code(200);
         echo json_encode(["message" => ucfirst($type) . " linked successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_LINK', ['msg' => $e->getMessage()]);
@@ -490,7 +487,6 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
         http_response_code(200);
         echo json_encode(["message" => ucfirst($type) . " unlinked successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_UNLINK', ['msg' => $e->getMessage()]);
@@ -502,11 +498,13 @@ if (strpos($request_uri, '/api/resources/unlink') !== false) {
 
 
 
-if (strpos($request_uri, '/api/agency/packages/create') === false &&
+if (
+    strpos($request_uri, '/api/agency/packages/create') === false &&
     strpos($request_uri, '/api/agency/packages/delete') === false &&
     strpos($request_uri, '/api/agency/packages/draft') === false &&
     strpos($request_uri, '/api/agency/packages/update') === false &&
-    strpos($request_uri, '/api/agency/packages') !== false) {
+    strpos($request_uri, '/api/agency/packages') !== false
+) {
 
     if (empty($data['agency_id']) || !is_numeric($data['agency_id'])) {
         http_response_code(400);
@@ -570,7 +568,6 @@ if (strpos($request_uri, '/api/agency/packages/create') === false &&
             "total_packages" => $total_packages,
             "avg_rating"     => $avg_rating,
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_FETCH_AGENCY_PACKAGES', ['msg' => $e->getMessage()]);
@@ -609,7 +606,7 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
 
         $package_id = (int)$pdo->lastInsertId();
 
-         
+
         if (!empty($data['image_url'])) {
             $stmtImg = $pdo->prepare("INSERT INTO packageimage (PackageID, ImageURL) VALUES (:pid, :url)");
             $stmtImg->execute([':pid' => $package_id, ':url' => trim($data['image_url'])]);
@@ -620,7 +617,6 @@ if (strpos($request_uri, '/api/agency/packages/create') !== false) {
             "message"    => "Package created successfully.",
             "package_id" => $package_id,
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_CREATE_PACKAGE', ['msg' => $e->getMessage()]);
@@ -676,7 +672,7 @@ if (strpos($request_uri, '/api/agency/packages/update') !== false) {
             ':agency_id'        => (int)$data['agency_id']
         ]);
 
-       
+
         $package_id = (int)$data['package_id'];
         $stmtDel = $pdo->prepare("DELETE FROM packageimage WHERE PackageID = :pid");
         $stmtDel->execute([':pid' => $package_id]);
@@ -688,7 +684,6 @@ if (strpos($request_uri, '/api/agency/packages/update') !== false) {
 
         http_response_code(200);
         echo json_encode(["message" => "Package updated successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_UPDATE_PACKAGE', ['msg' => $e->getMessage()]);
@@ -731,7 +726,6 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 
         http_response_code(200);
         echo json_encode(["message" => "Package deleted successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_DELETE_PACKAGE', ['msg' => $e->getMessage()]);
@@ -750,8 +744,10 @@ if (strpos($request_uri, '/api/agency/packages/delete') !== false) {
 // -----------------------------------------------------------------------
 if (strpos($request_uri, '/api/booking/check') !== false) {
 
-    if (empty($data['traveller_id']) || !is_numeric($data['traveller_id']) ||
-        empty($data['package_id'])   || !is_numeric($data['package_id'])) {
+    if (
+        empty($data['traveller_id']) || !is_numeric($data['traveller_id']) ||
+        empty($data['package_id'])   || !is_numeric($data['package_id'])
+    ) {
         http_response_code(400);
         echo json_encode(["error" => "traveller_id and package_id are required."]);
         exit();
@@ -775,7 +771,6 @@ if (strpos($request_uri, '/api/booking/check') !== false) {
             "already_booked" => (bool)$booking,
             "booking_id"     => $booking ? (int)$booking['BookingID'] : null
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Check failed: " . $e->getMessage()]);
@@ -792,9 +787,17 @@ if (strpos($request_uri, '/api/booking/check') !== false) {
 // -----------------------------------------------------------------------
 if (strpos($request_uri, '/api/flight/create') !== false) {
 
-    $required = ['agency_id','package_id','airline','flight_number',
-                 'departure_datetime','arrival_datetime','base_cost',
-                 'origin_airport_id','destination_airport_id'];
+    $required = [
+        'agency_id',
+        'package_id',
+        'airline',
+        'flight_number',
+        'departure_datetime',
+        'arrival_datetime',
+        'base_cost',
+        'origin_airport_id',
+        'destination_airport_id'
+    ];
     foreach ($required as $field) {
         if (empty($data[$field])) {
             http_response_code(400);
@@ -827,7 +830,7 @@ if (strpos($request_uri, '/api/flight/create') !== false) {
         ");
         $stmt->execute([
             ':fn'     => trim($data['flight_number']),
-            ':airline'=> trim($data['airline']),
+            ':airline' => trim($data['airline']),
             ':dep'    => $data['departure_datetime'],
             ':arr'    => $data['arrival_datetime'],
             ':cost'   => (float)$data['base_cost'],
@@ -842,7 +845,6 @@ if (strpos($request_uri, '/api/flight/create') !== false) {
 
         http_response_code(201);
         echo json_encode(["message" => "Flight created and linked.", "flight_id" => $flight_id]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Failed to create flight: " . $e->getMessage()]);
@@ -966,7 +968,7 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
         ");
         $stmtCount->execute([':pid' => $package_id]);
         $bookingData = $stmtCount->fetch();
-        
+
         $totalSeatsClaimed = (int)$bookingData['TotalSeatsClaimed'];
         $maxCapacity = (int)$pkg['MaxParticipants'];
 
@@ -974,7 +976,7 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
         // bypass the aggregate blocking cap so unlimited individual travelers can buy it!
         if ($maxCapacity <= 1) {
             // Solo trip flow: Capacity check is skipped because each departure accommodates infinite separate solo sign-ups
-            $spots_left = 999; 
+            $spots_left = 999;
         } else {
             // Group trip flow: Strictly enforce your live edited database capacity limits
             $spots_left = $maxCapacity - $totalSeatsClaimed;
@@ -985,7 +987,7 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
             http_response_code(409);
             echo json_encode([
                 "error"      => "Not enough spots available on this expedition.",
-                "spots_left" => Math.max(0, $spots_left)
+                "spots_left" => max(0, $spots_left)
             ]);
             exit();
         }
@@ -1014,7 +1016,6 @@ if (strpos($request_uri, '/api/booking/create') !== false) {
             "total_price" => $total_price,
             "status"      => "Pending"
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Booking processing failed: " . $e->getMessage()]);
@@ -1077,7 +1078,6 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 
         http_response_code(200);
         echo json_encode(["bookings" => $bookings]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_FETCH_BOOKINGS', ['msg' => $e->getMessage()]);
@@ -1088,18 +1088,20 @@ if (strpos($request_uri, '/api/traveller/bookings') !== false) {
 }
 
 
-if (strpos($request_uri, '/api/packages/details') === false &&
-    strpos($request_uri, '/api/packages') !== false) {
+if (
+    strpos($request_uri, '/api/packages/details') === false &&
+    strpos($request_uri, '/api/packages') !== false
+) {
 
-    
+
     $search   = isset($data['search'])   ? trim($data['search'])   : '';
     $price    = isset($data['price'])    ? trim($data['price'])    : '';
     $rating   = isset($data['rating'])   ? (int)$data['rating']    : 0;
     $duration = isset($data['duration']) ? trim($data['duration']) : '';
     $sort     = isset($data['sort'])     ? trim($data['sort'])     : 'recommended';
 
-    
-   
+
+
     $conditions = ["p.Title != 'Draft Package'"];
     $params     = [];
 
@@ -1108,7 +1110,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         $params[':search'] = '%' . $search . '%';
     }
 
-   
+
     if ($price !== '') {
         if ($price === '0-5000') {
             $conditions[] = "p.TotalPrice < 5000";
@@ -1119,13 +1121,13 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         }
     }
 
-  
+
     if ($rating > 0) {
         $conditions[] = "COALESCE(AVG_RATING.avg_rating, 0) >= :rating";
         $params[':rating'] = $rating;
     }
 
-   
+
     if ($duration !== '') {
         if ($duration === '1-3') {
             $conditions[] = "DATEDIFF(p.EndDate, p.StartDate) BETWEEN 1 AND 3";
@@ -1142,7 +1144,7 @@ if (strpos($request_uri, '/api/packages/details') === false &&
         ? 'WHERE ' . implode(' AND ', $conditions)
         : '';
 
-  
+
     $order_map = [
         'recommended' => 'COALESCE(AVG_RATING.avg_rating, 0) DESC',
         'price-low'   => 'p.TotalPrice ASC',
@@ -1221,7 +1223,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
     $package_id = (int)$data['package_id'];
 
     try {
-       
+
         $stmt = $pdo->prepare("
             SELECT
                 p.PackageID,
@@ -1251,14 +1253,14 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
             exit();
         }
 
-        
+
         $stmt = $pdo->prepare("
             SELECT ImageURL FROM packageimage WHERE PackageID = :pid
         ");
         $stmt->execute([':pid' => $package_id]);
         $images = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        
+
         $stmt = $pdo->prepare("
             SELECT d.DestinationID, d.Name, d.City, d.Region, d.Country, d.Description
             FROM destination d
@@ -1268,7 +1270,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $destinations = $stmt->fetchAll();
 
-        
+
         $stmt = $pdo->prepare("
             SELECT
                 f.FlightID,
@@ -1291,7 +1293,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $flights = $stmt->fetchAll();
 
-        
+
         $stmt = $pdo->prepare("
             SELECT
                 ac.AccommodationID,
@@ -1315,7 +1317,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $accommodations = $stmt->fetchAll();
 
-       
+
         $stmt = $pdo->prepare("
             SELECT
                 at.AttractionID,
@@ -1333,7 +1335,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $attractions = $stmt->fetchAll();
 
-        
+
         $stmt = $pdo->prepare("
             SELECT
                 r.RestaurantID,
@@ -1351,8 +1353,8 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $restaurants = $stmt->fetchAll();
 
-        
-        
+
+
         $stmt = $pdo->prepare("
             SELECT 
                 b.BookingID,
@@ -1388,7 +1390,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
         $stmt->execute([':pid' => $package_id]);
         $reviews = $stmt->fetchAll();
 
-        
+
         $avg_rating    = 0;
         $review_count  = count($reviews);
         if ($review_count > 0) {
@@ -1407,7 +1409,7 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 "StartDate"      => $package['StartDate'],
                 "EndDate"        => $package['EndDate'],
                 "Nights"         => (int)$package['Nights'],
-                "MaxParticipants"=> (int)$package['MaxParticipants'],
+                "MaxParticipants" => (int)$package['MaxParticipants'],
                 "TotalPrice"     => (float)$package['TotalPrice'],
                 "AvgRating"      => $avg_rating,
                 "ReviewCount"    => $review_count,
@@ -1429,7 +1431,6 @@ if (strpos($request_uri, '/api/packages/details') !== false) {
                 "BookingsList"   => $passenger_bookings
             ]
         ]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         write_log('ERROR', 'FAILED_TO_FETCH_PACKAGE_DETAILS', ['msg' => $e->getMessage()]);
@@ -1618,7 +1619,7 @@ if (strpos($request_uri, '/api/review/agency') !== false) {
         // 2. Calculate metrics
         $totalReviews = count($reviews);
         $avgPackageRating = 0;
-        
+
         if ($totalReviews > 0) {
             $totalStars = array_sum(array_column($reviews, 'Rating'));
             $avgPackageRating = round($totalStars / $totalReviews, 1);
@@ -1655,7 +1656,7 @@ if (strpos($request_uri, '/api/booking/cancel') !== false) {
     $traveller_id = (int)$data['traveller_id'];
 
     try {
-        
+
         $stmt = $pdo->prepare("SELECT Status FROM booking WHERE BookingID = :bid AND TravellerID = :tid");
         $stmt->execute([':bid' => $booking_id, ':tid' => $traveller_id]);
         $booking = $stmt->fetch();
@@ -1672,13 +1673,12 @@ if (strpos($request_uri, '/api/booking/cancel') !== false) {
             exit();
         }
 
-        
+
         $updateStmt = $pdo->prepare("UPDATE booking SET Status = 'Cancelled' WHERE BookingID = :bid");
         $updateStmt->execute([':bid' => $booking_id]);
 
         http_response_code(200);
         echo json_encode(["message" => "Booking cancelled successfully."]);
-
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(["error" => "Cancellation failed: " . $e->getMessage()]);
@@ -1689,4 +1689,3 @@ if (strpos($request_uri, '/api/booking/cancel') !== false) {
 
 http_response_code(404);
 echo json_encode(["error" => "Endpoint not found."]);
-?>

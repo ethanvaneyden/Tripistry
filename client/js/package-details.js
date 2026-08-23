@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 
 // -----------------------------------------------------------------------
 // Helpers
@@ -47,10 +47,10 @@ function renderHero(pkg) {
         ? pkg.Destinations.map(d => `${d.City}, ${d.Country}`).join(' · ')
         : '';
 
-    document.querySelector('.hero-image').src  = img;
-    document.querySelector('.hero-image').alt  = pkg.Title;
-    document.querySelector('.package-title').textContent   = pkg.Title;
-    document.querySelector('.package-location').innerHTML  =
+    document.querySelector('.hero-image').src = img;
+    document.querySelector('.hero-image').alt = pkg.Title;
+    document.querySelector('.package-title').textContent = pkg.Title;
+    document.querySelector('.package-location').innerHTML =
         `<i class="bi bi-geo-alt-fill"></i> ${destinations}`;
     document.title = `Tripistry — ${pkg.Title}`;
 }
@@ -112,7 +112,7 @@ function renderAccommodations(accommodations) {
             </span>
         </div>`).join('<hr class="hr-muted">');
 
-        card.innerHTML = `
+    card.innerHTML = `
         <h2 class="section-title"><i class="bi bi-building-check"></i> Accommodation</h2>
         ${rows}`;
 }
@@ -213,7 +213,7 @@ function renderReviews(reviews, avgRating, reviewCount) {
 }
 
 function renderBookingWidget(pkg) {
-    const nights    = pkg.Nights || 0;
+    const nights = pkg.Nights || 0;
     const dateRange = `${formatDate(pkg.StartDate)} – ${formatDate(pkg.EndDate)}`;
 
     document.querySelector('.widget-price').textContent = formatPrice(pkg.TotalPrice);
@@ -230,12 +230,12 @@ function renderBookingWidget(pkg) {
 
     // Initialise the booking modal with live package data
     initBookingModal({
-        packageId:       pkg.PackageID,
-        title:           pkg.Title,
-        startDate:       pkg.StartDate,
-        endDate:         pkg.EndDate,
-        nights:          pkg.Nights,
-        pricePerPerson:  pkg.TotalPrice,
+        packageId: pkg.PackageID,
+        title: pkg.Title,
+        startDate: pkg.StartDate,
+        endDate: pkg.EndDate,
+        nights: pkg.Nights,
+        pricePerPerson: pkg.TotalPrice,
         maxParticipants: pkg.MaxParticipants || null
     });
 
@@ -264,8 +264,8 @@ function showPageError(message) {
 // Main: read ?id= param and fetch
 // -----------------------------------------------------------------------
 async function init() {
-    const params     = new URLSearchParams(window.location.search);
-    const packageId  = params.get('id');
+    const params = new URLSearchParams(window.location.search);
+    const packageId = params.get('id');
 
     if (!packageId || isNaN(parseInt(packageId))) {
         showPageError('No package specified.');
@@ -273,7 +273,7 @@ async function init() {
     }
 
     try {
-        const res  = await fetch(`${API_BASE}/api/packages/details`, {
+        const res = await fetch(`${API_BASE}/api/packages/details`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({ package_id: parseInt(packageId) }),
@@ -309,16 +309,16 @@ init();
 // -----------------------------------------------------------------------
 async function checkAlreadyBooked(packageId, travellerId) {
     try {
-        const res  = await fetch(`${API_BASE}/api/booking/check`, {
-            method:  'POST',
+        const res = await fetch(`${API_BASE}/api/booking/check`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({ traveller_id: travellerId, package_id: packageId })
         });
         const data = await res.json();
         if (res.ok && data.already_booked) {
             const btn = document.querySelector('.btn-reserve');
-            btn.disabled   = true;
-            btn.innerHTML  = `<i class="bi bi-check-circle-fill"></i> Already Booked`;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Already Booked`;
             btn.classList.add('disabled');
         }
     } catch (_) {

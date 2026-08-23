@@ -1,0 +1,27 @@
+services:
+  tripistry:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_USER: tripistry
+      DB_PASS: tripistry
+      DB_NAME: tripistry
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:latest
+    ports:
+      - "3000:3306"
+    environment:
+      MARIADB_DATABASE: tripistry
+      MARIADB_USER: tripistry
+      MARIADB_PASSWORD: tripistry
+      MARIADB_ROOT_PASSWORD: rootpassword
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

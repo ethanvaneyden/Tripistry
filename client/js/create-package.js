@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost/Tripistry/server/api.php";
+const API_BASE = "/server/api.php";
 
 // -----------------------------------------------------------------------
 // Auth guard
@@ -436,30 +436,30 @@ publishBtn.addEventListener("click", async () => {
 });
 
 function showToast(message, type = 'info') {
-    let container = document.getElementById('toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        document.body.appendChild(container);
-    }
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
 
-    let iconClass = 'bi-info-circle';
-    if (type === 'success') iconClass = 'bi-check-circle';
-    if (type === 'error') iconClass = 'bi bi-exclamation-circle';
+  let iconClass = 'bi-info-circle';
+  if (type === 'success') iconClass = 'bi-check-circle';
+  if (type === 'error') iconClass = 'bi bi-exclamation-circle';
 
-    const toast = document.createElement('div');
-    toast.className = `custom-toast ${type}`;
-    toast.innerHTML = `
+  const toast = document.createElement('div');
+  toast.className = `custom-toast ${type}`;
+  toast.innerHTML = `
         <i class="bi ${iconClass}" style="font-size: 1.2rem;"></i>
         <div class="toast-message" style="flex-grow: 1;">${message}</div>
     `;
 
-    container.appendChild(toast);
+  container.appendChild(toast);
 
-    setTimeout(() => toast.classList.add('show'), 50);
+  setTimeout(() => toast.classList.add('show'), 50);
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => toast.remove());
-    }, 4000);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove());
+  }, 4000);
 }

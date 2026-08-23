@@ -1,28 +1,28 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 
 const packageSection = document.getElementById('package-section');
 
 // --- Filter / sort elements ---
-const searchInput    = document.getElementById('search');
-const priceSelect    = document.getElementById('filter-price');
-const ratingSelect   = document.getElementById('filter-rating');
+const searchInput = document.getElementById('search');
+const priceSelect = document.getElementById('filter-price');
+const ratingSelect = document.getElementById('filter-rating');
 const durationSelect = document.getElementById('filter-duration');
-const sortSelect     = document.getElementById('filter-sort');
+const sortSelect = document.getElementById('filter-sort');
 
 // -----------------------------------------------------------------------
 // Fetch packages from the API
 // -----------------------------------------------------------------------
 async function fetchPackages() {
     const body = {
-        search:   searchInput.value.trim(),
-        price:    priceSelect.value,
-        rating:   ratingSelect.value ? parseInt(ratingSelect.value) : 0,
+        search: searchInput.value.trim(),
+        price: priceSelect.value,
+        rating: ratingSelect.value ? parseInt(ratingSelect.value) : 0,
         duration: durationSelect.value,
-        sort:     sortSelect.value || 'recommended',
+        sort: sortSelect.value || 'recommended',
     };
 
     try {
-        const res  = await fetch(`${API_BASE}/api/packages`, {
+        const res = await fetch(`${API_BASE}/api/packages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify(body),
@@ -56,8 +56,8 @@ function formatPrice(price) {
 }
 
 function renderStars(rating) {
-    const full  = Math.round(rating);
-    let stars   = '';
+    const full = Math.round(rating);
+    let stars = '';
     for (let i = 1; i <= 5; i++) {
         stars += i <= full ? '★' : '☆';
     }
@@ -65,7 +65,7 @@ function renderStars(rating) {
 }
 
 function locationLabel(pkg) {
-    const city    = pkg.City    || '';
+    const city = pkg.City || '';
     const country = pkg.Country || '';
     if (city && country) return `${city}, ${country}`;
     return city || country || 'Unknown destination';
@@ -75,8 +75,8 @@ function locationLabel(pkg) {
 // Create a package card element
 // -----------------------------------------------------------------------
 function createCard(pkg) {
-    const card      = document.createElement('div');
-    const nights    = pkg.Nights    || 0;
+    const card = document.createElement('div');
+    const nights = pkg.Nights || 0;
     const avgRating = parseFloat(pkg.AvgRating) || 0;
     const reviewCount = parseInt(pkg.ReviewCount) || 0;
     const thumbnail = pkg.ThumbnailURL
@@ -162,11 +162,11 @@ function debounce(fn, delay = 350) {
 // -----------------------------------------------------------------------
 // Wire up filter controls
 // -----------------------------------------------------------------------
-searchInput.addEventListener('input',    () => debounce(() => { showLoading(); fetchPackages(); }));
-priceSelect.addEventListener('change',   () => { showLoading(); fetchPackages(); });
-ratingSelect.addEventListener('change',  () => { showLoading(); fetchPackages(); });
-durationSelect.addEventListener('change',() => { showLoading(); fetchPackages(); });
-sortSelect.addEventListener('change',    () => { showLoading(); fetchPackages(); });
+searchInput.addEventListener('input', () => debounce(() => { showLoading(); fetchPackages(); }));
+priceSelect.addEventListener('change', () => { showLoading(); fetchPackages(); });
+ratingSelect.addEventListener('change', () => { showLoading(); fetchPackages(); });
+durationSelect.addEventListener('change', () => { showLoading(); fetchPackages(); });
+sortSelect.addEventListener('change', () => { showLoading(); fetchPackages(); });
 
 // --- Initial load ---
 showLoading();

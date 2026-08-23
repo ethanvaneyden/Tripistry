@@ -1,8 +1,8 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 
-const submit        = document.getElementById('submit');
+const submit = document.getElementById('submit');
 const passwordField = document.getElementById('password');
-const emailField    = document.getElementById('email');
+const emailField = document.getElementById('email');
 
 // Show a success message if arriving after registration
 const params = new URLSearchParams(window.location.search);
@@ -18,11 +18,11 @@ if (params.get('registered') === '1') {
 }
 
 async function login() {
-    const email    = emailField.value.trim();
+    const email = emailField.value.trim();
     const password = passwordField.value;
 
     try {
-        const res  = await fetch(`${API_BASE}/api/login`, {
+        const res = await fetch(`${API_BASE}/api/login`, {
             method: 'POST',
             headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -36,12 +36,12 @@ async function login() {
 submit.addEventListener('click', async (e) => {
     e.preventDefault();
 
-    submit.disabled    = true;
+    submit.disabled = true;
     submit.textContent = 'Logging in…';
 
     const response = await login();
 
-    submit.disabled    = false;
+    submit.disabled = false;
     submit.textContent = 'Login';
 
     if (response.message !== 'Login successful!') {

@@ -1,6 +1,6 @@
-const API_BASE = 'http://localhost/Tripistry/server/api.php';
+const API_BASE = '/server/api.php';
 
-const form      = document.querySelector('.auth-form');
+const form = document.querySelector('.auth-form');
 const submitBtn = form.querySelector('button[type="submit"]');
 
 function showError(message) {
@@ -23,13 +23,13 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearError();
 
-    const name     = document.getElementById('name').value.trim();
-    const email    = document.getElementById('email').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const phone    = document.getElementById('phone').value.trim();
-    const street   = document.getElementById('street').value.trim();
-    const city     = document.getElementById('city').value.trim();
-    const country  = document.getElementById('country').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const street = document.getElementById('street').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const country = document.getElementById('country').value.trim();
 
     // Client-side validation
     if (!name || !email || !password || !phone || !street || !city || !country) {
@@ -41,11 +41,11 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    submitBtn.disabled    = true;
+    submitBtn.disabled = true;
     submitBtn.textContent = 'Registering…';
 
     try {
-        const res  = await fetch(`${API_BASE}/api/register/agency`, {
+        const res = await fetch(`${API_BASE}/api/register/agency`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({ name, email, password, phone, street, city, country }),
@@ -63,7 +63,7 @@ form.addEventListener('submit', async (e) => {
     } catch (err) {
         showError('Could not connect to the server. Make sure XAMPP is running.');
     } finally {
-        submitBtn.disabled    = false;
+        submitBtn.disabled = false;
         submitBtn.textContent = 'Register';
     }
 });
